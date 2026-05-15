@@ -1,0 +1,11 @@
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                if (compileSdkVersion != null && compileSdkVersion.toString().toIntOrNull() != null && compileSdkVersion.toString().toInt() < 34) {
+                    compileSdkVersion 34
+                }
+            }
+        }
+    }
+}
