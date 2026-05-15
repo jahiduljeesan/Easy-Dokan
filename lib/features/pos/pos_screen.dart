@@ -7,6 +7,8 @@ import '../../data/models/product_model.dart';
 import '../../data/models/sale_model.dart';
 import '../../data/repositories_impl/sale_repository_impl.dart';
 import '../../core/services/pdf_service.dart';
+import '../../core/widgets/calculator_dialog.dart';
+import '../products/barcode_scanner_screen.dart';
 
 class POSScreen extends ConsumerStatefulWidget {
   const POSScreen({super.key});
@@ -17,6 +19,18 @@ class POSScreen extends ConsumerStatefulWidget {
 
 class _POSScreenState extends ConsumerState<POSScreen> {
   String _searchQuery = '';
+
+  void _handleBarcodeScan(String barcode) {
+    final match = ref.read(productsProvider).firstWhere(
+          (p) => p.barcodeId == barcode,
+          orElse: () => ProductModel(uid: '', name: '', buyingPrice: 0, sellingPrice: 0, quantity: 0, createdDate: DateTime.now(), updatedDate: DateTime.now()),
+        );
+    if (match.uid.isNotEmpty) {
+      ref.read(cartProvider.notifier).addProduct(match);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product not found!')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,18 +175,44 @@ class _POSScreenState extends ConsumerState<POSScreen> {
         title: const Text('Point of Sale'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () async {
+            icon: const Icon(Icons.calculate),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const CalculatorDialog(),
+              );
+            },
+          ),
+          InkWell(
+            onTap: () async {
               final barcode = await context.push<String>('/scanner');
               if (barcode != null) {
-                final match = ref.read(productsProvider).firstWhere((p) => p.barcodeId == barcode, orElse: () => ProductModel(uid: '', name: '', buyingPrice: 0, sellingPrice: 0, quantity: 0, createdDate: DateTime.now(), updatedDate: DateTime.now()));
-                if (match.uid.isNotEmpty) {
-                  ref.read(cartProvider.notifier).addProduct(match);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product not found!')));
-                }
+                _handleBarcodeScan(barcode);
               }
             },
+            onLongPress: () async {
+              final barcode = await showDialog<String>(
+                context: context,
+                builder: (context) => const Dialog(
+                  insetPadding: EdgeInsets.all(16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    child: SizedBox(
+                      width: 400,
+                      height: 500,
+                      child: BarcodeScannerScreen(isPopup: true),
+                    ),
+                  ),
+                ),
+              );
+              if (barcode != null) {
+                _handleBarcodeScan(barcode);
+              }
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Icon(Icons.qr_code_scanner),
+            ),
           )
         ],
       ),
