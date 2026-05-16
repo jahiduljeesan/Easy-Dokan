@@ -411,4 +411,28 @@ class _POSScreenState extends ConsumerState<POSScreen> {
             ),
     );
   }
+
+  Widget _buildSummaryRow(String label, double amount,
+      {bool isBold = false, double fontSize = 16, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            '৳${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
