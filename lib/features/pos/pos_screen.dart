@@ -9,6 +9,9 @@ import '../../data/repositories_impl/sale_repository_impl.dart';
 import '../../core/services/pdf_service.dart';
 import '../../core/widgets/calculator_dialog.dart';
 import '../products/barcode_scanner_screen.dart';
+import '../customers/customers_provider.dart';
+import '../../data/models/customer_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class POSScreen extends ConsumerStatefulWidget {
   const POSScreen({super.key});
@@ -19,6 +22,7 @@ class POSScreen extends ConsumerStatefulWidget {
 
 class _POSScreenState extends ConsumerState<POSScreen> {
   String _searchQuery = '';
+  String _selectedCategory = 'All';
 
   void _handleBarcodeScan(String barcode) {
     final match = ref.read(productsProvider).firstWhere(
@@ -35,66 +39,98 @@ class _POSScreenState extends ConsumerState<POSScreen> {
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
-    final products = ref.watch(productsProvider).where((p) {
+    final allProducts = ref.watch(productsProvider);
+    
+    final categories = ['All', ...allProducts.map((p) => p.category ?? 'Uncategorized').toSet().where((c) => c.isNotEmpty)];
+
+    final products = allProducts.where((p) {
       final query = _searchQuery.toLowerCase();
-      return p.name.toLowerCase().contains(query) || (p.barcodeId != null && p.barcodeId!.contains(query));
+      final matchesSearch = p.name.toLowerCase().contains(query) || (p.barcodeId != null && p.barcodeId!.contains(query));
+      final matchesCategory = _selectedCategory == 'All' || (p.category ?? 'Uncategorized') == _selectedCategory;
+      return matchesSearch && matchesCategory;
     }).toList();
 
     final isWideScreen = MediaQuery.of(context).size.width > 600;
 
     Widget productsGrid = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: const InputDecoration(
-              labelText: 'Search Products',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (val) => setState(() => _searchQuery = val),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Search Products',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final barcode = await showDialog<String>(
+                    context: context,
+                    builder: (context) => Dialog(
+                      insetPadding: const EdgeInsets.all(16),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        child: SizedBox(
+                          width: 400,
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: const BarcodeScannerScreen(isPopup: true),
+                        ),
+                      ),
+                    ),
+                  );
+                  if (barcode != null) _handleBarcodeScan(barcode);
+                },
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Quick Scan'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: categories.length,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemBuilder: (context, index) {
+              final cat = categories.elementAt(index);
+              final isSelected = _selectedCategory == cat;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(cat),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) setState(() => _selectedCategory = cat);
+                  },
+                ),
+              );
+            },
           ),
         ),
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(8),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isWideScreen ? 3 : 2,
-              childAspectRatio: 0.8,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
+          child: ListView.builder(
             itemCount: products.length,
             itemBuilder: (context, index) {
               final p = products[index];
               return Card(
-                elevation: 2,
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () {
-                    ref.read(cartProvider.notifier).addProduct(p);
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.inventory, size: 40, color: Colors.grey),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            Text('৳${p.sellingPrice} | Stock: ${p.quantity}', style: const TextStyle(fontSize: 12, color: Colors.green)),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text('${p.category ?? 'Uncategorized'} | Stock: ${p.quantity}'),
+                  trailing: Text('৳${p.sellingPrice}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+                  onTap: () => ref.read(cartProvider.notifier).addProduct(p),
                 ),
               );
             },
@@ -193,14 +229,14 @@ class _POSScreenState extends ConsumerState<POSScreen> {
             onLongPress: () async {
               final barcode = await showDialog<String>(
                 context: context,
-                builder: (context) => const Dialog(
-                  insetPadding: EdgeInsets.all(16),
+                builder: (context) => Dialog(
+                  insetPadding: const EdgeInsets.all(16),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
                     child: SizedBox(
                       width: 400,
-                      height: 500,
-                      child: BarcodeScannerScreen(isPopup: true),
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      child: const BarcodeScannerScreen(isPopup: true),
                     ),
                   ),
                 ),
@@ -246,6 +282,10 @@ class _POSScreenState extends ConsumerState<POSScreen> {
 
   void _showCheckoutDialog(BuildContext context, CartState cartState, bool isWideScreen) {
     double paidAmount = cartState.total;
+    String phone = '';
+    String newCustomerName = '';
+    CustomerModel? selectedCustomer;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -253,30 +293,82 @@ class _POSScreenState extends ConsumerState<POSScreen> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Checkout'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Total Amount: ৳${cartState.total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Paid Amount', border: OutlineInputBorder()),
-                    onChanged: (val) {
-                      setState(() {
-                        paidAmount = double.tryParse(val) ?? 0.0;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Due: ৳${(cartState.total - paidAmount).clamp(0.0, double.infinity).toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
-                  Text('Return: ৳${(paidAmount - cartState.total).clamp(0.0, double.infinity).toStringAsFixed(2)}', style: const TextStyle(color: Colors.green)),
-                ],
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Total Amount: ৳${cartState.total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    TextField(
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(labelText: 'Customer Phone (Optional)', border: OutlineInputBorder()),
+                      onChanged: (val) {
+                        setState(() {
+                          phone = val;
+                          if (phone.isNotEmpty) {
+                            final customers = ref.read(customersProvider);
+                            try {
+                              selectedCustomer = customers.firstWhere((c) => c.phone == phone);
+                            } catch (_) {
+                              selectedCustomer = null;
+                            }
+                          } else {
+                            selectedCustomer = null;
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    if (phone.isNotEmpty && selectedCustomer != null)
+                      Text('Existing Customer: ${selectedCustomer!.name}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                    if (phone.isNotEmpty && selectedCustomer == null)
+                      TextField(
+                        decoration: const InputDecoration(labelText: 'New Customer Name', border: OutlineInputBorder()),
+                        onChanged: (val) => newCustomerName = val,
+                      ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Paid Amount', border: OutlineInputBorder()),
+                      onChanged: (val) {
+                        setState(() {
+                          paidAmount = double.tryParse(val) ?? 0.0;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Due: ৳${(cartState.total - paidAmount).clamp(0.0, double.infinity).toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
+                    Text('Return: ৳${(paidAmount - cartState.total).clamp(0.0, double.infinity).toStringAsFixed(2)}', style: const TextStyle(color: Colors.green)),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                 ElevatedButton(
                   onPressed: () async {
                     final now = DateTime.now();
+                    
+                    // Handle customer creation/linking
+                    String customerId = '';
+                    String cPhone = phone;
+                    if (phone.isNotEmpty) {
+                      if (selectedCustomer != null) {
+                        customerId = selectedCustomer!.id;
+                        // update due amount logic could be added here
+                      } else if (newCustomerName.isNotEmpty) {
+                        final newCustomer = CustomerModel(
+                          id: now.millisecondsSinceEpoch.toString(),
+                          name: newCustomerName,
+                          phone: phone,
+                          address: '',
+                          dueAmount: (cartState.total - paidAmount).clamp(0.0, double.infinity),
+                          createdDate: now,
+                        );
+                        await ref.read(customersProvider.notifier).addCustomer(newCustomer);
+                        customerId = newCustomer.id;
+                      }
+                    }
+
                     final saleItems = cartState.items.map((i) => SaleItemModel(
                       productId: i.product.uid,
                       productName: i.product.name,
@@ -288,6 +380,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
 
                     final sale = SaleModel(
                       id: now.millisecondsSinceEpoch.toString(),
+                      customerId: customerId.isNotEmpty ? customerId : null,
                       items: saleItems,
                       subtotal: cartState.subtotal,
                       discount: cartState.discount,
@@ -320,13 +413,48 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                     ref.read(cartProvider.notifier).clearCart();
                     
                     if (context.mounted) {
-                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context); // Close checkout dialog
                       if (!isWideScreen) Navigator.pop(context); // Close bottom sheet if open
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sale Completed Successfully!')));
+                      
+                      // Show post-sale options
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Sale Options'),
+                          content: const Text('Invoice created. What would you like to do?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Done'),
+                            ),
+                            if (cPhone.isNotEmpty)
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final msg = 'Thank you for purchasing ৳${sale.total} from Easy-Dokan!';
+                                  final uri = Uri.parse('sms:$cPhone?body=${Uri.encodeComponent(msg)}');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri);
+                                  } else {
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Could not launch SMS app')));
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.sms),
+                                label: const Text('Send SMS'),
+                              ),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                PdfService.generateAndPrintInvoice(sale);
+                              },
+                              icon: const Icon(Icons.print),
+                              label: const Text('Print Invoice'),
+                            ),
+                          ],
+                        )
+                      );
                     }
-                    
-                    // Print Invoice
-                    await PdfService.generateAndPrintInvoice(sale);
                   },
                   child: const Text('Confirm Sale'),
                 )

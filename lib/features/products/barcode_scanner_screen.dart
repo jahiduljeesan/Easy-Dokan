@@ -39,13 +39,6 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scanWindowSize = MediaQuery.of(context).size.width * 0.7;
-    final scanWindow = Rect.fromCenter(
-      center: MediaQuery.of(context).size.center(Offset.zero),
-      width: scanWindowSize,
-      height: scanWindowSize,
-    );
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: widget.isPopup ? null : AppBar(
@@ -53,85 +46,96 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Stack(
-        children: [
-          MobileScanner(
-            controller: controller,
-            scanWindow: scanWindow,
-            onDetect: (capture) {
-              if (isDetected) return;
-              final List<Barcode> barcodes = capture.barcodes;
-              if (barcodes.isNotEmpty) {
-                final barcode = barcodes.first;
-                if (barcode.rawValue != null) {
-                  isDetected = true;
-                  controller.stop();
-                  if (widget.isPopup) {
-                    Navigator.of(context).pop(barcode.rawValue);
-                  } else {
-                    context.pop(barcode.rawValue);
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final scanWindowSize = constraints.maxWidth * 0.7;
+          final scanWindow = Rect.fromCenter(
+            center: Offset(constraints.maxWidth / 2, constraints.maxHeight / 2),
+            width: scanWindowSize,
+            height: scanWindowSize,
+          );
+
+          return Stack(
+            children: [
+              MobileScanner(
+                controller: controller,
+                scanWindow: scanWindow,
+                onDetect: (capture) {
+                  if (isDetected) return;
+                  final List<Barcode> barcodes = capture.barcodes;
+                  if (barcodes.isNotEmpty) {
+                    final barcode = barcodes.first;
+                    if (barcode.rawValue != null) {
+                      isDetected = true;
+                      controller.stop();
+                      if (widget.isPopup) {
+                        Navigator.of(context).pop(barcode.rawValue);
+                      } else {
+                        context.pop(barcode.rawValue);
+                      }
+                    }
                   }
-                }
-              }
-            },
-          ),
-          CustomPaint(
-            painter: ScannerOverlayPainter(scanWindow: scanWindow),
-            child: Container(),
-          ),
-          AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              final currentY = scanWindow.top +
-                  (scanWindow.height * _animationController.value);
-              return Positioned(
-                top: currentY,
-                left: scanWindow.left,
-                width: scanWindow.width,
-                child: Container(
-                  height: 2,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.withOpacity(0.5),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      )
-                    ],
+                },
+              ),
+              CustomPaint(
+                painter: ScannerOverlayPainter(scanWindow: scanWindow),
+                child: Container(),
+              ),
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  final currentY = scanWindow.top +
+                      (scanWindow.height * _animationController.value);
+                  return Positioned(
+                    top: currentY,
+                    left: scanWindow.left,
+                    width: scanWindow.width,
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.5),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              Positioned(
+                bottom: 40,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: () => controller.toggleTorch(),
+                      icon: const Icon(Icons.flash_on, color: Colors.white, size: 32),
+                    ),
+                    IconButton(
+                      onPressed: () => controller.switchCamera(),
+                      icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 32),
+                    ),
+                  ],
+                ),
+              ),
+              if (widget.isPopup)
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, color: Colors.white, size: 32),
                   ),
                 ),
-              );
-            },
-          ),
-          Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  onPressed: () => controller.toggleTorch(),
-                  icon: const Icon(Icons.flash_on, color: Colors.white, size: 32),
-                ),
-                IconButton(
-                  onPressed: () => controller.switchCamera(),
-                  icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 32),
-                ),
-              ],
-            ),
-          ),
-          if (widget.isPopup)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close, color: Colors.white, size: 32),
-              ),
-            ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -160,7 +164,7 @@ class ScannerOverlayPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
 
-    final cornerLength = 20.0;
+    const cornerLength = 20.0;
     
     // Top-Left
     canvas.drawLine(scanWindow.topLeft, scanWindow.topLeft + Offset(cornerLength, 0), borderPaint);

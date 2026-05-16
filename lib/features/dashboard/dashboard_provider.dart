@@ -1,8 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/product_model.dart';
-import '../../data/models/sale_model.dart';
-import '../../data/models/customer_model.dart';
-import '../../data/models/debt_model.dart';
 import '../../data/repositories_impl/product_repository_impl.dart';
 import '../../data/repositories_impl/sale_repository_impl.dart';
 import '../../data/repositories_impl/customer_repository_impl.dart';

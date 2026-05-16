@@ -59,9 +59,9 @@ class _ShopWizardScreenState extends ConsumerState<ShopWizardScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'PIN Lock (Optional)',
-                  prefixIcon: const Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock),
                 ),
                 keyboardType: TextInputType.number,
                 obscureText: true,
@@ -72,7 +72,7 @@ class _ShopWizardScreenState extends ConsumerState<ShopWizardScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedCurrency,
+                initialValue: _selectedCurrency,
                 decoration: InputDecoration(
                   labelText: 'currency'.tr(context),
                   prefixIcon: const Icon(Icons.monetization_on),
