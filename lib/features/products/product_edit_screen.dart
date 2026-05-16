@@ -20,10 +20,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   late TextEditingController _sellingPriceController;
   late TextEditingController _quantityController;
   late TextEditingController _categoryController;
+  Map<String, String> _attributes = {};
 
   @override
   void initState() {
     super.initState();
+    _attributes = Map<String, String>.from(widget.product?.attributes ?? {});
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _barcodeController = TextEditingController(
       text: widget.product?.barcodeId ?? '',
@@ -53,6 +55,44 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     super.dispose();
   }
 
+  void _showAddAttributeDialog() {
+    String key = '';
+    String value = '';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Detail'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: const InputDecoration(labelText: 'Field Name (e.g. Size, Color)'),
+              onChanged: (v) => key = v,
+            ),
+            TextField(
+              decoration: const InputDecoration(labelText: 'Value'),
+              onChanged: (v) => value = v,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => context.pop(), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (key.isNotEmpty && value.isNotEmpty) {
+                setState(() {
+                  _attributes[key] = value;
+                });
+                context.pop();
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _saveProduct() {
     if (_formKey.currentState!.validate()) {
       final now = DateTime.now();
@@ -70,6 +110,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             : _categoryController.text,
         createdDate: widget.product?.createdDate ?? now,
         updatedDate: now,
+        attributes: _attributes.isEmpty ? null : _attributes,
       );
 
       if (widget.product == null) {
@@ -179,6 +220,54 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Additional Details',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton.icon(
+                    onPressed: _showAddAttributeDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Field'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_attributes.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'No additional details added yet.',
+                    style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                  ),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _attributes.length,
+                  itemBuilder: (context, index) {
+                    final key = _attributes.keys.elementAt(index);
+                    final value = _attributes[key];
+                    return Card(
+                      child: ListTile(
+                        title: Text(key),
+                        subtitle: Text(value ?? ''),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              _attributes.remove(key);
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,

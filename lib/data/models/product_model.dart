@@ -58,6 +58,9 @@ class ProductModel extends HiveObject {
   @HiveField(17)
   DateTime updatedDate;
 
+  @HiveField(18)
+  Map<String, String>? attributes;
+
   ProductModel({
     required this.uid,
     this.barcodeId,
@@ -77,5 +80,6 @@ class ProductModel extends HiveObject {
     this.expiryDate,
     required this.createdDate,
     required this.updatedDate,
+    this.attributes,
   });
 }

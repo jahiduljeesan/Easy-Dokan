@@ -220,4 +220,96 @@ class PdfService {
       onLayout: (PdfPageFormat format) async => pdf.save(),
     );
   }
+
+  static Future<void> generateSalesReport(
+      DateTime start, DateTime end, List<SaleModel> sales) async {
+    final pdf = pw.Document();
+    final totalSales = sales.fold(0.0, (sum, s) => sum + s.total);
+    final totalProfit = sales.fold(0.0, (sum, s) => sum + s.profit);
+    final totalDue = sales.fold(0.0, (sum, s) => sum + s.dueAmount);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return [
+            pw.Header(
+              level: 0,
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('SALES REPORT',
+                      style: pw.TextStyle(
+                          fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                  pw.Text('EASY DOKAN',
+                      style: pw.TextStyle(
+                          fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text(
+                'Period: ${start.toString().split(' ')[0]} to ${end.toString().split(' ')[0]}'),
+            pw.SizedBox(height: 20),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatCard('Total Sales', '৳${totalSales.toStringAsFixed(0)}'),
+                _buildStatCard('Total Profit', '৳${totalProfit.toStringAsFixed(0)}'),
+                _buildStatCard('Total Due', '৳${totalDue.toStringAsFixed(0)}'),
+                _buildStatCard('Transactions', '${sales.length}'),
+              ],
+            ),
+            pw.SizedBox(height: 30),
+            pw.Table.fromTextArray(
+              headers: ['Date', 'Invoice ID', 'Items', 'Total', 'Profit'],
+              data: sales.map((s) {
+                return [
+                  s.date.toString().substring(0, 16),
+                  s.id,
+                  '${s.items.length}',
+                  '৳${s.total.toStringAsFixed(0)}',
+                  '৳${s.profit.toStringAsFixed(0)}',
+                ];
+              }).toList(),
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              headerDecoration:
+                  const pw.BoxDecoration(color: PdfColors.grey300),
+              cellHeight: 25,
+              cellAlignments: {
+                0: pw.Alignment.centerLeft,
+                1: pw.Alignment.centerLeft,
+                2: pw.Alignment.center,
+                3: pw.Alignment.centerRight,
+                4: pw.Alignment.centerRight,
+              },
+            ),
+            pw.SizedBox(height: 50),
+            pw.Center(child: pw.Text('End of Report')),
+          ];
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+  }
+
+  static pw.Widget _buildStatCard(String title, String value) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(5)),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(title, style: const pw.TextStyle(fontSize: 10)),
+          pw.Text(value,
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        ],
+      ),
+    );
+  }
 }

@@ -120,13 +120,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           '৳${currentSales.toStringAsFixed(0)}',
           Icons.point_of_sale,
           Colors.blue,
+          onTap: () => context.push('/dashboard/sales-report'),
         ),
         _buildCard(
           context,
-          'Total Profit',
+          'total_profit'.tr(context),
           '৳${stats.totalProfit.toStringAsFixed(0)}',
           Icons.trending_up,
           Colors.green,
+          onTap: () => context.push('/dashboard/sales-report'),
         ),
         _buildCard(
           context,
