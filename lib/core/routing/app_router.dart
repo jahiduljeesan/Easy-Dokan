@@ -12,8 +12,12 @@ import '../../features/products/products_screen.dart';
 import '../../features/products/product_edit_screen.dart';
 import '../../features/products/barcode_scanner_screen.dart';
 import '../../features/pos/pos_screen.dart';
+import '../../features/pos/checkout_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/customers/customers_screen.dart';
+import '../../features/customers/customer_edit_screen.dart';
 import '../../data/models/product_model.dart';
+import '../../data/models/customer_model.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final isAuthComplete = ref.watch(authStateProvider);
@@ -97,6 +101,24 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/customers',
+                builder: (context, state) => const CustomersScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'add',
+                    builder: (context, state) => const CustomerEditScreen(),
+                  ),
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => CustomerEditScreen(customer: state.extra as CustomerModel),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/settings',
                 builder: (context, state) => const SettingsScreen(),
               ),
@@ -107,6 +129,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/scanner',
         builder: (context, state) => const BarcodeScannerScreen(),
+      ),
+      GoRoute(
+        path: '/checkout',
+        builder: (context, state) => const CheckoutScreen(),
       ),
     ],
   );

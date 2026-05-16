@@ -21,4 +21,14 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<void> addCustomer(CustomerModel customer) async {
     await _box.put(customer.id, customer);
   }
+
+  @override
+  Future<void> updateCustomer(CustomerModel customer) async {
+    await _box.put(customer.id, customer);
+  }
+
+  @override
+  Future<void> deleteCustomer(String id) async {
+    await _box.delete(id);
+  }
 }

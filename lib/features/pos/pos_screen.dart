@@ -4,14 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'cart_provider.dart';
 import '../products/products_provider.dart';
 import '../../data/models/product_model.dart';
-import '../../data/models/sale_model.dart';
-import '../../data/repositories_impl/sale_repository_impl.dart';
-import '../../core/services/pdf_service.dart';
 import '../../core/widgets/calculator_dialog.dart';
 import '../products/barcode_scanner_screen.dart';
-import '../customers/customers_provider.dart';
-import '../../data/models/customer_model.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class POSScreen extends ConsumerStatefulWidget {
   const POSScreen({super.key});
@@ -185,7 +179,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
           child: Column(
             children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), Text('৳${cartState.subtotal.toStringAsFixed(2)}')]),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Discount'), Text('৳${cartState.discount.toStringAsFixed(2)}')]),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Discount'), Text('৳${cartState.totalDiscount.toStringAsFixed(2)}')]),
               const Divider(),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('Total', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -196,7 +190,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: cartState.items.isEmpty ? null : () => _showCheckoutDialog(context, cartState, isWideScreen),
+                  onPressed: cartState.items.isEmpty ? null : () => context.push('/checkout'),
                   child: const Text('Checkout', style: TextStyle(fontSize: 18)),
                 ),
               )
@@ -277,192 +271,6 @@ class _POSScreenState extends ConsumerState<POSScreen> {
               icon: const Icon(Icons.shopping_cart),
               label: Text('${cartState.items.length} items | ৳${cartState.total.toStringAsFixed(2)}'),
             ),
-    );
-  }
-
-  void _showCheckoutDialog(BuildContext context, CartState cartState, bool isWideScreen) {
-    double paidAmount = cartState.total;
-    String phone = '';
-    String newCustomerName = '';
-    CustomerModel? selectedCustomer;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Checkout'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Total Amount: ৳${cartState.total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    TextField(
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Customer Phone (Optional)', border: OutlineInputBorder()),
-                      onChanged: (val) {
-                        setState(() {
-                          phone = val;
-                          if (phone.isNotEmpty) {
-                            final customers = ref.read(customersProvider);
-                            try {
-                              selectedCustomer = customers.firstWhere((c) => c.phone == phone);
-                            } catch (_) {
-                              selectedCustomer = null;
-                            }
-                          } else {
-                            selectedCustomer = null;
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    if (phone.isNotEmpty && selectedCustomer != null)
-                      Text('Existing Customer: ${selectedCustomer!.name}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                    if (phone.isNotEmpty && selectedCustomer == null)
-                      TextField(
-                        decoration: const InputDecoration(labelText: 'New Customer Name', border: OutlineInputBorder()),
-                        onChanged: (val) => newCustomerName = val,
-                      ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Paid Amount', border: OutlineInputBorder()),
-                      onChanged: (val) {
-                        setState(() {
-                          paidAmount = double.tryParse(val) ?? 0.0;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Due: ৳${(cartState.total - paidAmount).clamp(0.0, double.infinity).toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
-                    Text('Return: ৳${(paidAmount - cartState.total).clamp(0.0, double.infinity).toStringAsFixed(2)}', style: const TextStyle(color: Colors.green)),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                ElevatedButton(
-                  onPressed: () async {
-                    final now = DateTime.now();
-                    
-                    // Handle customer creation/linking
-                    String customerId = '';
-                    String cPhone = phone;
-                    if (phone.isNotEmpty) {
-                      if (selectedCustomer != null) {
-                        customerId = selectedCustomer!.id;
-                        // update due amount logic could be added here
-                      } else if (newCustomerName.isNotEmpty) {
-                        final newCustomer = CustomerModel(
-                          id: now.millisecondsSinceEpoch.toString(),
-                          name: newCustomerName,
-                          phone: phone,
-                          address: '',
-                          dueAmount: (cartState.total - paidAmount).clamp(0.0, double.infinity),
-                          createdDate: now,
-                        );
-                        await ref.read(customersProvider.notifier).addCustomer(newCustomer);
-                        customerId = newCustomer.id;
-                      }
-                    }
-
-                    final saleItems = cartState.items.map((i) => SaleItemModel(
-                      productId: i.product.uid,
-                      productName: i.product.name,
-                      quantity: i.quantity,
-                      unitPrice: i.product.sellingPrice,
-                      total: i.totalPrice,
-                      buyingPrice: i.product.buyingPrice,
-                    )).toList();
-
-                    final sale = SaleModel(
-                      id: now.millisecondsSinceEpoch.toString(),
-                      customerId: customerId.isNotEmpty ? customerId : null,
-                      items: saleItems,
-                      subtotal: cartState.subtotal,
-                      discount: cartState.discount,
-                      vat: cartState.vat,
-                      total: cartState.total,
-                      paidAmount: paidAmount,
-                      dueAmount: (cartState.total - paidAmount).clamp(0.0, double.infinity),
-                      profit: cartState.totalProfit,
-                      paymentMethod: 'CASH',
-                      date: now,
-                    );
-
-                    await ref.read(saleRepositoryProvider).addSale(sale);
-                    
-                    // Deduct stock
-                    for (var item in cartState.items) {
-                      final updatedProduct = ProductModel(
-                        uid: item.product.uid,
-                        barcodeId: item.product.barcodeId,
-                        name: item.product.name,
-                        buyingPrice: item.product.buyingPrice,
-                        sellingPrice: item.product.sellingPrice,
-                        quantity: item.product.quantity - item.quantity,
-                        createdDate: item.product.createdDate,
-                        updatedDate: now,
-                      );
-                      ref.read(productsProvider.notifier).updateProduct(updatedProduct);
-                    }
-
-                    ref.read(cartProvider.notifier).clearCart();
-                    
-                    if (context.mounted) {
-                      Navigator.pop(context); // Close checkout dialog
-                      if (!isWideScreen) Navigator.pop(context); // Close bottom sheet if open
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sale Completed Successfully!')));
-                      
-                      // Show post-sale options
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Sale Options'),
-                          content: const Text('Invoice created. What would you like to do?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('Done'),
-                            ),
-                            if (cPhone.isNotEmpty)
-                              ElevatedButton.icon(
-                                onPressed: () async {
-                                  final msg = 'Thank you for purchasing ৳${sale.total} from Easy-Dokan!';
-                                  final uri = Uri.parse('sms:$cPhone?body=${Uri.encodeComponent(msg)}');
-                                  if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri);
-                                  } else {
-                                    if (ctx.mounted) {
-                                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Could not launch SMS app')));
-                                    }
-                                  }
-                                },
-                                icon: const Icon(Icons.sms),
-                                label: const Text('Send SMS'),
-                              ),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                PdfService.generateAndPrintInvoice(sale);
-                              },
-                              icon: const Icon(Icons.print),
-                              label: const Text('Print Invoice'),
-                            ),
-                          ],
-                        )
-                      );
-                    }
-                  },
-                  child: const Text('Confirm Sale'),
-                )
-              ],
-            );
-          }
-        );
-      }
     );
   }
 }

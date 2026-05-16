@@ -33,6 +33,10 @@ class MainShell extends StatelessWidget {
             label: 'products'.tr(context),
           ),
           NavigationDestination(
+            icon: const Icon(Icons.people),
+            label: 'customers'.tr(context),
+          ),
+          NavigationDestination(
             icon: const Icon(Icons.settings),
             label: 'settings'.tr(context),
           ),
