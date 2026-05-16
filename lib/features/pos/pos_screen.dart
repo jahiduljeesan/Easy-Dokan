@@ -19,14 +19,26 @@ class _POSScreenState extends ConsumerState<POSScreen> {
   String _selectedCategory = 'All';
 
   void _handleBarcodeScan(String barcode) {
-    final match = ref.read(productsProvider).firstWhere(
+    final match = ref
+        .read(productsProvider)
+        .firstWhere(
           (p) => p.barcodeId == barcode,
-          orElse: () => ProductModel(uid: '', name: '', buyingPrice: 0, sellingPrice: 0, quantity: 0, createdDate: DateTime.now(), updatedDate: DateTime.now()),
+          orElse: () => ProductModel(
+            uid: '',
+            name: '',
+            buyingPrice: 0,
+            sellingPrice: 0,
+            quantity: 0,
+            createdDate: DateTime.now(),
+            updatedDate: DateTime.now(),
+          ),
         );
     if (match.uid.isNotEmpty) {
       ref.read(cartProvider.notifier).addProduct(match);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product not found!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product not found!')));
     }
   }
 
@@ -34,13 +46,23 @@ class _POSScreenState extends ConsumerState<POSScreen> {
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final allProducts = ref.watch(productsProvider);
-    
-    final categories = ['All', ...allProducts.map((p) => p.category ?? 'Uncategorized').toSet().where((c) => c.isNotEmpty)];
+
+    final categories = [
+      'All',
+      ...allProducts
+          .map((p) => p.category ?? 'Uncategorized')
+          .toSet()
+          .where((c) => c.isNotEmpty),
+    ];
 
     final products = allProducts.where((p) {
       final query = _searchQuery.toLowerCase();
-      final matchesSearch = p.name.toLowerCase().contains(query) || (p.barcodeId != null && p.barcodeId!.contains(query));
-      final matchesCategory = _selectedCategory == 'All' || (p.category ?? 'Uncategorized') == _selectedCategory;
+      final matchesSearch =
+          p.name.toLowerCase().contains(query) ||
+          (p.barcodeId != null && p.barcodeId!.contains(query));
+      final matchesCategory =
+          _selectedCategory == 'All' ||
+          (p.category ?? 'Uncategorized') == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
 
@@ -71,7 +93,9 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                     builder: (context) => Dialog(
                       insetPadding: const EdgeInsets.all(16),
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(16),
+                        ),
                         child: SizedBox(
                           width: 400,
                           height: MediaQuery.of(context).size.height * 0.6,
@@ -85,7 +109,10 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                 icon: const Icon(Icons.qr_code_scanner),
                 label: const Text('Quick Scan'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
                 ),
               ),
             ],
@@ -121,9 +148,21 @@ class _POSScreenState extends ConsumerState<POSScreen> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('${p.category ?? 'Uncategorized'} | Stock: ${p.quantity}'),
-                  trailing: Text('৳${p.sellingPrice}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+                  title: Text(
+                    p.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${p.category ?? 'Uncategorized'} | Stock: ${p.quantity}',
+                  ),
+                  trailing: Text(
+                    '৳${p.sellingPrice}',
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   onTap: () => ref.read(cartProvider.notifier).addProduct(p),
                 ),
               );
@@ -142,61 +181,160 @@ class _POSScreenState extends ConsumerState<POSScreen> {
             children: [
               const Icon(Icons.shopping_cart),
               const SizedBox(width: 8),
-              Text('Cart (${cartState.items.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                'Cart (${cartState.items.length})',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              if (cartState.items.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => ref.read(cartProvider.notifier).clearCart(),
+                  icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                  label: const Text('Clear', style: TextStyle(color: Colors.red)),
+                ),
             ],
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            itemCount: cartState.items.length,
-            itemBuilder: (context, index) {
-              final item = cartState.items[index];
-              return ListTile(
-                title: Text(item.product.name),
-                subtitle: Text('৳${item.product.sellingPrice} x ${item.quantity}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: () => ref.read(cartProvider.notifier).updateQuantity(item.product.uid, item.quantity - 1),
-                    ),
-                    Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () => ref.read(cartProvider.notifier).updateQuantity(item.product.uid, item.quantity + 1),
-                    ),
-                  ],
+          child: cartState.items.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('Your cart is empty', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: cartState.items.length,
+                  itemBuilder: (context, index) {
+                    final item = cartState.items[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: ListTile(
+                        title: Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text('৳${item.product.sellingPrice} x ${item.quantity}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline, color: Colors.orange),
+                              onPressed: () => ref.read(cartProvider.notifier).updateQuantity(item.product.uid, item.quantity - 1),
+                            ),
+                            Text(
+                              '${item.quantity}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                              onPressed: () => ref.read(cartProvider.notifier).updateQuantity(item.product.uid, item.quantity + 1),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: () => ref.read(cartProvider.notifier).removeProduct(item.product.uid),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
         const Divider(height: 1),
         Container(
           padding: const EdgeInsets.all(16),
-          color: Theme.of(context).colorScheme.surface,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
           child: Column(
             children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Subtotal'), Text('৳${cartState.subtotal.toStringAsFixed(2)}')]),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Discount'), Text('৳${cartState.totalDiscount.toStringAsFixed(2)}')]),
-              const Divider(),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                const Text('Total', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                Text('৳${cartState.total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Disc (%)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        prefixIcon: Icon(Icons.percent, size: 18),
+                      ),
+                      onChanged: (val) => ref.read(cartProvider.notifier).setDiscountPercentage(double.tryParse(val) ?? 0.0),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Disc (৳)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        prefixIcon: Icon(Icons.money_off, size: 18),
+                      ),
+                      onChanged: (val) => ref.read(cartProvider.notifier).setDiscountFixed(double.tryParse(val) ?? 0.0),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildSummaryRow('Subtotal', cartState.subtotal),
+              _buildSummaryRow('Discount', -cartState.totalDiscount, color: Colors.red),
+              const Divider(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Payable',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '৳${cartState.total.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 54,
                 child: ElevatedButton(
                   onPressed: cartState.items.isEmpty ? null : () => context.push('/checkout'),
-                  child: const Text('Checkout', style: TextStyle(fontSize: 18)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_outline),
+                      SizedBox(width: 8),
+                      Text('PROCEED TO CHECKOUT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
-              )
+              ),
             ],
           ),
-        )
+        ),
       ],
     );
 
@@ -243,7 +381,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Icon(Icons.qr_code_scanner),
             ),
-          )
+          ),
         ],
       ),
       body: isWideScreen
@@ -262,14 +400,14 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
-                  builder: (context) => FractionallySizedBox(
-                    heightFactor: 0.8,
-                    child: cartPanel,
-                  ),
+                  builder: (context) =>
+                      FractionallySizedBox(heightFactor: 0.8, child: cartPanel),
                 );
               },
               icon: const Icon(Icons.shopping_cart),
-              label: Text('${cartState.items.length} items | ৳${cartState.total.toStringAsFixed(2)}'),
+              label: Text(
+                '${cartState.items.length} items | ৳${cartState.total.toStringAsFixed(2)}',
+              ),
             ),
     );
   }

@@ -33,7 +33,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
 
   double todaySales = 0.0;
   double totalProfit = 0.0;
-  
+
   for (var sale in sales) {
     totalProfit += sale.profit;
     if (sale.date.isAfter(todayStart)) {

@@ -9,16 +9,12 @@ import 'localization/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Hive
   await Hive.initFlutter();
   await HiveService.init();
 
-  runApp(
-    const ProviderScope(
-      child: EasyDokanApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: EasyDokanApp()));
 }
 
 // Provider for locale
@@ -43,10 +39,7 @@ class EasyDokanApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       locale: locale,
-      supportedLocales: const [
-        Locale('en', ''),
-        Locale('bn', ''),
-      ],
+      supportedLocales: const [Locale('en', ''), Locale('bn', '')],
       localizationsDelegates: const [
         AppLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,

@@ -52,7 +52,7 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
         if (operand.isEmpty) return;
         num2 = double.parse(_output);
         _history = "${_formatNumber(num1)} $operand ${_formatNumber(num2)} =";
-        
+
         switch (operand) {
           case "+":
             _output = (num1 + num2).toString();
@@ -71,7 +71,7 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
             }
             break;
         }
-        
+
         if (_output != "Error") {
           num1 = double.parse(_output);
           _output = _formatNumber(num1);
@@ -106,7 +106,9 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
           borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
-              color: color ?? Theme.of(context).colorScheme.surfaceContainerHighest,
+              color:
+                  color ??
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -115,7 +117,9 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                 style: TextStyle(
                   fontSize: 24.0,
                   fontWeight: FontWeight.bold,
-                  color: textColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
+                  color:
+                      textColor ??
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -156,7 +160,9 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
               padding: const EdgeInsets.all(16),
               alignment: Alignment.centerRight,
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
+                  0.5,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -165,7 +171,9 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                   Text(
                     _history,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                        0.7,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -187,10 +195,26 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                   Expanded(
                     child: Row(
                       children: [
-                        buildButton("C", color: actionColor, textColor: actionTextColor),
-                        buildButton("⌫", color: actionColor, textColor: actionTextColor),
-                        buildButton("%", color: operatorColor, textColor: operatorTextColor),
-                        buildButton("÷", color: operatorColor, textColor: operatorTextColor),
+                        buildButton(
+                          "C",
+                          color: actionColor,
+                          textColor: actionTextColor,
+                        ),
+                        buildButton(
+                          "⌫",
+                          color: actionColor,
+                          textColor: actionTextColor,
+                        ),
+                        buildButton(
+                          "%",
+                          color: operatorColor,
+                          textColor: operatorTextColor,
+                        ),
+                        buildButton(
+                          "÷",
+                          color: operatorColor,
+                          textColor: operatorTextColor,
+                        ),
                       ],
                     ),
                   ),
@@ -200,7 +224,11 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                         buildButton("7"),
                         buildButton("8"),
                         buildButton("9"),
-                        buildButton("×", color: operatorColor, textColor: operatorTextColor),
+                        buildButton(
+                          "×",
+                          color: operatorColor,
+                          textColor: operatorTextColor,
+                        ),
                       ],
                     ),
                   ),
@@ -210,7 +238,11 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                         buildButton("4"),
                         buildButton("5"),
                         buildButton("6"),
-                        buildButton("-", color: operatorColor, textColor: operatorTextColor),
+                        buildButton(
+                          "-",
+                          color: operatorColor,
+                          textColor: operatorTextColor,
+                        ),
                       ],
                     ),
                   ),
@@ -220,7 +252,11 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                         buildButton("1"),
                         buildButton("2"),
                         buildButton("3"),
-                        buildButton("+", color: operatorColor, textColor: operatorTextColor),
+                        buildButton(
+                          "+",
+                          color: operatorColor,
+                          textColor: operatorTextColor,
+                        ),
                       ],
                     ),
                   ),
@@ -229,13 +265,17 @@ class _CalculatorDialogState extends State<CalculatorDialog> {
                       children: [
                         buildButton("0"),
                         buildButton("."),
-                        buildButton("=", color: theme.colorScheme.primary, textColor: theme.colorScheme.onPrimary),
+                        buildButton(
+                          "=",
+                          color: theme.colorScheme.primary,
+                          textColor: theme.colorScheme.onPrimary,
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

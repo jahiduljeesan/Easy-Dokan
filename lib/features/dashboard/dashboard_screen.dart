@@ -16,10 +16,7 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('dashboard'.tr(context)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
-          )
+          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
         ],
       ),
       body: SingleChildScrollView(
@@ -31,7 +28,9 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Text(
               'Sales Analytics',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             _buildChartCard(context),
@@ -50,17 +49,59 @@ class DashboardScreen extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.2,
       children: [
-        _buildCard(context, 'today_sales'.tr(context), '৳${stats.todaySales.toStringAsFixed(2)}', Icons.point_of_sale, Colors.blue),
-        _buildCard(context, 'total_profit'.tr(context), '৳${stats.totalProfit.toStringAsFixed(2)}', Icons.trending_up, Colors.green),
-        _buildCard(context, 'total_debt'.tr(context), '৳${stats.totalDebt.toStringAsFixed(2)}', Icons.money_off, Colors.orange),
-        _buildCard(context, 'products'.tr(context), '${stats.totalProducts}', Icons.inventory_2, Colors.purple),
-        _buildCard(context, 'customers'.tr(context), '${stats.totalCustomers}', Icons.people, Colors.teal),
-        _buildCard(context, 'low_stock'.tr(context), '${stats.lowStockCount}', Icons.warning_amber, Colors.red),
+        _buildCard(
+          context,
+          'today_sales'.tr(context),
+          '৳${stats.todaySales.toStringAsFixed(2)}',
+          Icons.point_of_sale,
+          Colors.blue,
+        ),
+        _buildCard(
+          context,
+          'total_profit'.tr(context),
+          '৳${stats.totalProfit.toStringAsFixed(2)}',
+          Icons.trending_up,
+          Colors.green,
+        ),
+        _buildCard(
+          context,
+          'total_debt'.tr(context),
+          '৳${stats.totalDebt.toStringAsFixed(2)}',
+          Icons.money_off,
+          Colors.orange,
+        ),
+        _buildCard(
+          context,
+          'products'.tr(context),
+          '${stats.totalProducts}',
+          Icons.inventory_2,
+          Colors.purple,
+        ),
+        _buildCard(
+          context,
+          'customers'.tr(context),
+          '${stats.totalCustomers}',
+          Icons.people,
+          Colors.teal,
+        ),
+        _buildCard(
+          context,
+          'low_stock'.tr(context),
+          '${stats.lowStockCount}',
+          Icons.warning_amber,
+          Colors.red,
+        ),
       ],
     );
   }
 
-  Widget _buildCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -74,14 +115,18 @@ class DashboardScreen extends ConsumerWidget {
             const Spacer(),
             Text(
               value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -110,7 +155,15 @@ class DashboardScreen extends ConsumerWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
-                      const titles = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                      const titles = [
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu',
+                        'Fri',
+                        'Sat',
+                        'Sun',
+                      ];
                       if (value >= 0 && value < titles.length) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
@@ -121,9 +174,15 @@ class DashboardScreen extends ConsumerWidget {
                     },
                   ),
                 ),
-                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
               ),
               borderData: FlBorderData(show: false),
               barGroups: [
@@ -136,7 +195,7 @@ class DashboardScreen extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.primary,
                         width: 16,
                         borderRadius: BorderRadius.circular(4),
-                      )
+                      ),
                     ],
                   ),
               ],

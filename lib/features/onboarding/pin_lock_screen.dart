@@ -39,9 +39,9 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
       ref.read(authStateProvider.notifier).state = true;
       context.go('/dashboard');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Incorrect PIN')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Incorrect PIN')));
       setState(() {
         enteredPin = '';
       });
@@ -121,11 +121,7 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
         shape: BoxShape.circle,
         color: Theme.of(context).colorScheme.surface,
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Material(
@@ -138,7 +134,10 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
                 ? Icon(icon, size: 32)
                 : Text(
                     value,
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
           ),
         ),

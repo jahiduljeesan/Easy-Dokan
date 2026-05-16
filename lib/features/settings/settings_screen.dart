@@ -13,9 +13,7 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('settings'.tr(context)),
-      ),
+      appBar: AppBar(title: Text('settings'.tr(context))),
       body: ListView(
         children: [
           SwitchListTile(
@@ -23,7 +21,9 @@ class SettingsScreen extends ConsumerWidget {
             secondary: const Icon(Icons.dark_mode),
             value: themeMode == ThemeMode.dark,
             onChanged: (val) {
-              ref.read(themeModeProvider.notifier).state = val ? ThemeMode.dark : ThemeMode.light;
+              ref.read(themeModeProvider.notifier).state = val
+                  ? ThemeMode.dark
+                  : ThemeMode.light;
             },
           ),
           ListTile(
@@ -37,7 +37,9 @@ class SettingsScreen extends ConsumerWidget {
               ],
               onChanged: (val) {
                 if (val != null) {
-                  ref.read(settingsNotifierProvider.notifier).updateLanguage(val);
+                  ref
+                      .read(settingsNotifierProvider.notifier)
+                      .updateLanguage(val);
                 }
               },
             ),
@@ -45,7 +47,11 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.lock),
             title: const Text('Set PIN Lock'),
-            subtitle: Text((settings.pinCode != null && settings.pinCode!.isNotEmpty) ? 'PIN is set' : 'No PIN'),
+            subtitle: Text(
+              (settings.pinCode != null && settings.pinCode!.isNotEmpty)
+                  ? 'PIN is set'
+                  : 'No PIN',
+            ),
             onTap: () {
               _showPinDialog(context, ref);
             },
@@ -63,7 +69,11 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.backup),
             title: const Text('Backup Database'),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Backup feature to be implemented')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Backup feature to be implemented'),
+                ),
+              );
             },
           ),
         ],
@@ -90,9 +100,15 @@ class SettingsScreen extends ConsumerWidget {
               ref.read(settingsNotifierProvider.notifier).setPinCode('');
               Navigator.pop(context);
             },
-            child: const Text('Remove PIN', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Remove PIN',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               if (newPin.length == 4) {

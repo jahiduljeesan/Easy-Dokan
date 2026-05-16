@@ -51,7 +51,10 @@ class LanguageSelectionScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text('বাংলা', style: TextStyle(fontSize: 18, color: primaryColor)),
+                child: Text(
+                  'বাংলা',
+                  style: TextStyle(fontSize: 18, color: primaryColor),
+                ),
               ),
             ],
           ),

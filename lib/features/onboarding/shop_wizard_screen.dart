@@ -23,9 +23,7 @@ class _ShopWizardScreenState extends ConsumerState<ShopWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('setup_shop'.tr(context)),
-      ),
+      appBar: AppBar(title: Text('setup_shop'.tr(context))),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -90,15 +88,19 @@ class _ShopWizardScreenState extends ConsumerState<ShopWizardScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    await ref.read(settingsNotifierProvider.notifier).completeSetup(
-                      shopName: _nameController.text,
-                      currency: _selectedCurrency,
-                      language: ref.read(localeProvider).languageCode,
-                      address: _addressController.text,
-                      phone: _phoneController.text,
-                    );
+                    await ref
+                        .read(settingsNotifierProvider.notifier)
+                        .completeSetup(
+                          shopName: _nameController.text,
+                          currency: _selectedCurrency,
+                          language: ref.read(localeProvider).languageCode,
+                          address: _addressController.text,
+                          phone: _phoneController.text,
+                        );
                     if (_pinCode != null) {
-                      await ref.read(settingsNotifierProvider.notifier).setPinCode(_pinCode!);
+                      await ref
+                          .read(settingsNotifierProvider.notifier)
+                          .setPinCode(_pinCode!);
                     }
                     if (context.mounted) {
                       context.go('/dashboard');
@@ -108,7 +110,10 @@ class _ShopWizardScreenState extends ConsumerState<ShopWizardScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text('continue_btn'.tr(context), style: const TextStyle(fontSize: 18)),
+                child: Text(
+                  'continue_btn'.tr(context),
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
             ],
           ),

@@ -3,10 +3,11 @@ import '../../data/models/product_model.dart';
 import '../../data/repositories_impl/product_repository_impl.dart';
 import '../../domain/repositories/product_repository.dart';
 
-final productsProvider = StateNotifierProvider<ProductsNotifier, List<ProductModel>>((ref) {
-  final repo = ref.watch(productRepositoryProvider);
-  return ProductsNotifier(repo);
-});
+final productsProvider =
+    StateNotifierProvider<ProductsNotifier, List<ProductModel>>((ref) {
+      final repo = ref.watch(productRepositoryProvider);
+      return ProductsNotifier(repo);
+    });
 
 class ProductsNotifier extends StateNotifier<List<ProductModel>> {
   final ProductRepository _repo;

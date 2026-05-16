@@ -20,10 +20,12 @@ class ProductsScreen extends ConsumerWidget {
               final barcode = await context.push<String>('/scanner');
               if (barcode != null) {
                 // handle finding product by barcode (to be implemented)
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scanned: $barcode')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Scanned: $barcode')));
               }
             },
-          )
+          ),
         ],
       ),
       body: products.isEmpty
@@ -35,7 +37,9 @@ class ProductsScreen extends ConsumerWidget {
                 return ListTile(
                   leading: const CircleAvatar(child: Icon(Icons.inventory_2)),
                   title: Text(product.name),
-                  subtitle: Text('Stock: ${product.quantity} | Price: ৳${product.sellingPrice}'),
+                  subtitle: Text(
+                    'Stock: ${product.quantity} | Price: ৳${product.sellingPrice}',
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -48,7 +52,9 @@ class ProductsScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
-                          ref.read(productsProvider.notifier).deleteProduct(product.uid);
+                          ref
+                              .read(productsProvider.notifier)
+                              .deleteProduct(product.uid);
                         },
                       ),
                     ],

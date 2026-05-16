@@ -29,7 +29,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final settings = settingsBox.get('app_settings') ?? SettingsModel();
 
       final isSetupComplete = settings.isSetupComplete;
-      final isGoingToSetup = state.uri.path == '/' || state.uri.path == '/setup_wizard';
+      final isGoingToSetup =
+          state.uri.path == '/' || state.uri.path == '/setup_wizard';
       final isGoingToPin = state.uri.path == '/pin';
 
       if (!isSetupComplete && !isGoingToSetup) {
@@ -40,10 +41,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/pin';
       }
 
-      if (isSetupComplete && isAuthComplete && (isGoingToSetup || isGoingToPin)) {
+      if (isSetupComplete &&
+          isAuthComplete &&
+          (isGoingToSetup || isGoingToPin)) {
         return '/dashboard';
       }
-      
+
       return null;
     },
     routes: [
@@ -55,10 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/setup_wizard',
         builder: (context, state) => const ShopWizardScreen(),
       ),
-      GoRoute(
-        path: '/pin',
-        builder: (context, state) => const PinLockScreen(),
-      ),
+      GoRoute(path: '/pin', builder: (context, state) => const PinLockScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainShell(navigationShell: navigationShell);
@@ -92,9 +92,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'edit',
-                    builder: (context, state) => ProductEditScreen(product: state.extra as ProductModel),
+                    builder: (context, state) =>
+                        ProductEditScreen(product: state.extra as ProductModel),
                   ),
-                ]
+                ],
               ),
             ],
           ),
@@ -110,7 +111,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'edit',
-                    builder: (context, state) => CustomerEditScreen(customer: state.extra as CustomerModel),
+                    builder: (context, state) => CustomerEditScreen(
+                      customer: state.extra as CustomerModel,
+                    ),
                   ),
                 ],
               ),

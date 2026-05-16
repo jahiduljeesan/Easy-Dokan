@@ -41,11 +41,13 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: widget.isPopup ? null : AppBar(
-        title: const Text('Scan Barcode'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: widget.isPopup
+          ? null
+          : AppBar(
+              title: const Text('Scan Barcode'),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final scanWindowSize = constraints.maxWidth * 0.7;
@@ -84,7 +86,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
               AnimatedBuilder(
                 animation: _animationController,
                 builder: (context, child) {
-                  final currentY = scanWindow.top +
+                  final currentY =
+                      scanWindow.top +
                       (scanWindow.height * _animationController.value);
                   return Positioned(
                     top: currentY,
@@ -99,7 +102,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
                             color: Colors.red.withOpacity(0.5),
                             blurRadius: 10,
                             spreadRadius: 2,
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -115,11 +118,19 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
                   children: [
                     IconButton(
                       onPressed: () => controller.toggleTorch(),
-                      icon: const Icon(Icons.flash_on, color: Colors.white, size: 32),
+                      icon: const Icon(
+                        Icons.flash_on,
+                        color: Colors.white,
+                        size: 32,
+                      ),
                     ),
                     IconButton(
                       onPressed: () => controller.switchCamera(),
-                      icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 32),
+                      icon: const Icon(
+                        Icons.flip_camera_ios,
+                        color: Colors.white,
+                        size: 32,
+                      ),
                     ),
                   ],
                 ),
@@ -130,7 +141,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
                   right: 16,
                   child: IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ),
             ],
@@ -165,22 +180,54 @@ class ScannerOverlayPainter extends CustomPainter {
       ..strokeWidth = 3.0;
 
     const cornerLength = 20.0;
-    
+
     // Top-Left
-    canvas.drawLine(scanWindow.topLeft, scanWindow.topLeft + Offset(cornerLength, 0), borderPaint);
-    canvas.drawLine(scanWindow.topLeft, scanWindow.topLeft + Offset(0, cornerLength), borderPaint);
-    
+    canvas.drawLine(
+      scanWindow.topLeft,
+      scanWindow.topLeft + Offset(cornerLength, 0),
+      borderPaint,
+    );
+    canvas.drawLine(
+      scanWindow.topLeft,
+      scanWindow.topLeft + Offset(0, cornerLength),
+      borderPaint,
+    );
+
     // Top-Right
-    canvas.drawLine(scanWindow.topRight, scanWindow.topRight + Offset(-cornerLength, 0), borderPaint);
-    canvas.drawLine(scanWindow.topRight, scanWindow.topRight + Offset(0, cornerLength), borderPaint);
-    
+    canvas.drawLine(
+      scanWindow.topRight,
+      scanWindow.topRight + Offset(-cornerLength, 0),
+      borderPaint,
+    );
+    canvas.drawLine(
+      scanWindow.topRight,
+      scanWindow.topRight + Offset(0, cornerLength),
+      borderPaint,
+    );
+
     // Bottom-Left
-    canvas.drawLine(scanWindow.bottomLeft, scanWindow.bottomLeft + Offset(cornerLength, 0), borderPaint);
-    canvas.drawLine(scanWindow.bottomLeft, scanWindow.bottomLeft + Offset(0, -cornerLength), borderPaint);
-    
+    canvas.drawLine(
+      scanWindow.bottomLeft,
+      scanWindow.bottomLeft + Offset(cornerLength, 0),
+      borderPaint,
+    );
+    canvas.drawLine(
+      scanWindow.bottomLeft,
+      scanWindow.bottomLeft + Offset(0, -cornerLength),
+      borderPaint,
+    );
+
     // Bottom-Right
-    canvas.drawLine(scanWindow.bottomRight, scanWindow.bottomRight + Offset(-cornerLength, 0), borderPaint);
-    canvas.drawLine(scanWindow.bottomRight, scanWindow.bottomRight + Offset(0, -cornerLength), borderPaint);
+    canvas.drawLine(
+      scanWindow.bottomRight,
+      scanWindow.bottomRight + Offset(-cornerLength, 0),
+      borderPaint,
+    );
+    canvas.drawLine(
+      scanWindow.bottomRight,
+      scanWindow.bottomRight + Offset(0, -cornerLength),
+      borderPaint,
+    );
   }
 
   @override

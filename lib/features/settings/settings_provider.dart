@@ -3,10 +3,11 @@ import '../../data/models/settings_model.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../../data/repositories_impl/settings_repository_impl.dart';
 
-final settingsNotifierProvider = StateNotifierProvider<SettingsNotifier, SettingsModel>((ref) {
-  final repository = ref.watch(settingsRepositoryProvider);
-  return SettingsNotifier(repository);
-});
+final settingsNotifierProvider =
+    StateNotifierProvider<SettingsNotifier, SettingsModel>((ref) {
+      final repository = ref.watch(settingsRepositoryProvider);
+      return SettingsNotifier(repository);
+    });
 
 class SettingsNotifier extends StateNotifier<SettingsModel> {
   final SettingsRepository _repository;

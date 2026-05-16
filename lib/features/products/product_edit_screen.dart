@@ -25,11 +25,21 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.product?.name ?? '');
-    _barcodeController = TextEditingController(text: widget.product?.barcodeId ?? '');
-    _buyingPriceController = TextEditingController(text: widget.product?.buyingPrice.toString() ?? '');
-    _sellingPriceController = TextEditingController(text: widget.product?.sellingPrice.toString() ?? '');
-    _quantityController = TextEditingController(text: widget.product?.quantity.toString() ?? '');
-    _categoryController = TextEditingController(text: widget.product?.category ?? '');
+    _barcodeController = TextEditingController(
+      text: widget.product?.barcodeId ?? '',
+    );
+    _buyingPriceController = TextEditingController(
+      text: widget.product?.buyingPrice.toString() ?? '',
+    );
+    _sellingPriceController = TextEditingController(
+      text: widget.product?.sellingPrice.toString() ?? '',
+    );
+    _quantityController = TextEditingController(
+      text: widget.product?.quantity.toString() ?? '',
+    );
+    _categoryController = TextEditingController(
+      text: widget.product?.category ?? '',
+    );
   }
 
   @override
@@ -49,11 +59,15 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       final product = ProductModel(
         uid: widget.product?.uid ?? now.millisecondsSinceEpoch.toString(),
         name: _nameController.text,
-        barcodeId: _barcodeController.text.isEmpty ? null : _barcodeController.text,
+        barcodeId: _barcodeController.text.isEmpty
+            ? null
+            : _barcodeController.text,
         buyingPrice: double.tryParse(_buyingPriceController.text) ?? 0.0,
         sellingPrice: double.tryParse(_sellingPriceController.text) ?? 0.0,
         quantity: int.tryParse(_quantityController.text) ?? 0,
-        category: _categoryController.text.isEmpty ? null : _categoryController.text,
+        category: _categoryController.text.isEmpty
+            ? null
+            : _categoryController.text,
         createdDate: widget.product?.createdDate ?? now,
         updatedDate: now,
       );
@@ -73,10 +87,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       appBar: AppBar(
         title: Text(widget.product == null ? 'Add Product' : 'Edit Product'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _saveProduct,
-          )
+          IconButton(icon: const Icon(Icons.check), onPressed: _saveProduct),
         ],
       ),
       body: SingleChildScrollView(
@@ -87,8 +98,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Product Name', prefixIcon: Icon(Icons.shopping_bag)),
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Product Name',
+                  prefixIcon: Icon(Icons.shopping_bag),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               Row(
@@ -96,7 +111,10 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _barcodeController,
-                      decoration: const InputDecoration(labelText: 'Barcode', prefixIcon: Icon(Icons.qr_code)),
+                      decoration: const InputDecoration(
+                        labelText: 'Barcode',
+                        prefixIcon: Icon(Icons.qr_code),
+                      ),
                     ),
                   ),
                   IconButton(
@@ -115,7 +133,10 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category', prefixIcon: Icon(Icons.category)),
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  prefixIcon: Icon(Icons.category),
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -124,8 +145,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                     child: TextFormField(
                       controller: _buyingPriceController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Buying Price', prefixIcon: Icon(Icons.money)),
-                      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Buying Price',
+                        prefixIcon: Icon(Icons.money),
+                      ),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Required' : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -133,8 +158,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                     child: TextFormField(
                       controller: _sellingPriceController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Selling Price', prefixIcon: Icon(Icons.attach_money)),
-                      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Selling Price',
+                        prefixIcon: Icon(Icons.attach_money),
+                      ),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Required' : null,
                     ),
                   ),
                 ],
@@ -143,8 +172,12 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               TextFormField(
                 controller: _quantityController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Quantity', prefixIcon: Icon(Icons.inventory)),
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  prefixIcon: Icon(Icons.inventory),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 32),
               SizedBox(

@@ -4,9 +4,9 @@ import '../../data/models/product_model.dart';
 class CartItem {
   final ProductModel product;
   int quantity;
-  
+
   CartItem({required this.product, this.quantity = 1});
-  
+
   double get totalPrice => product.sellingPrice * quantity;
 }
 
@@ -24,14 +24,26 @@ class CartState {
   });
 
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.totalPrice);
-  
-  double get totalDiscount => (subtotal * (discountPercentage / 100)) + discountFixed;
-  
-  double get total => subtotal - totalDiscount + vat;
-  
-  double get totalProfit => items.fold(0.0, (sum, item) => sum + ((item.product.sellingPrice - item.product.buyingPrice) * item.quantity)) - totalDiscount;
-  
-  CartState copyWith({List<CartItem>? items, double? discountPercentage, double? discountFixed, double? vat}) {
+
+  double get totalDiscount =>
+      (subtotal * (discountPercentage / 100)) + discountFixed;
+
+  double get total =>
+      (subtotal - totalDiscount + vat).clamp(0.0, double.infinity);
+
+  double get totalProfit =>
+      (total - vat) -
+      items.fold(
+        0.0,
+        (sum, item) => sum + (item.product.buyingPrice * item.quantity),
+      );
+
+  CartState copyWith({
+    List<CartItem>? items,
+    double? discountPercentage,
+    double? discountFixed,
+    double? vat,
+  }) {
     return CartState(
       items: items ?? this.items,
       discountPercentage: discountPercentage ?? this.discountPercentage,
@@ -49,13 +61,20 @@ class CartNotifier extends StateNotifier<CartState> {
   CartNotifier() : super(CartState());
 
   void addProduct(ProductModel product) {
-    final existingIndex = state.items.indexWhere((item) => item.product.uid == product.uid);
+    final existingIndex = state.items.indexWhere(
+      (item) => item.product.uid == product.uid,
+    );
     if (existingIndex >= 0) {
       final newItems = List<CartItem>.from(state.items);
       newItems[existingIndex].quantity += 1;
       state = state.copyWith(items: newItems);
     } else {
-      state = state.copyWith(items: [...state.items, CartItem(product: product)]);
+      state = state.copyWith(
+        items: [
+          ...state.items,
+          CartItem(product: product),
+        ],
+      );
     }
   }
 
@@ -73,7 +92,9 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   void removeProduct(String uid) {
-    final newItems = state.items.where((item) => item.product.uid != uid).toList();
+    final newItems = state.items
+        .where((item) => item.product.uid != uid)
+        .toList();
     state = state.copyWith(items: newItems);
   }
 
