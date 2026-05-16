@@ -245,6 +245,132 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
+  void _showCustomerSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Consumer(
+          builder: (context, ref, child) {
+            final allCustomers = ref.watch(customersProvider);
+            String searchDialogQuery = '';
+
+            return StatefulBuilder(builder: (context, setLocalState) {
+              final filteredCustomers = allCustomers.where((c) {
+                final q = searchDialogQuery.toLowerCase();
+                return c.name.toLowerCase().contains(q) || c.phone.contains(q);
+              }).toList();
+
+              return Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Container(
+                  width: 500,
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Select Customer',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Search by name or phone...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: (val) {
+                          setLocalState(() {
+                            searchDialogQuery = val;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: filteredCustomers.isEmpty
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(32.0),
+                                  child: Text('No customers found'),
+                                ),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                itemCount: filteredCustomers.length,
+                                separatorBuilder: (c, i) => const Divider(),
+                                itemBuilder: (context, index) {
+                                  final c = filteredCustomers[index];
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: Theme.of(context)
+                                          .colorScheme
+                                          .primaryContainer,
+                                      child: Text(c.name[0].toUpperCase()),
+                                    ),
+                                    title: Text(c.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    subtitle: Text(c.phone),
+                                    trailing: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '৳${c.dueAmount.toStringAsFixed(0)}',
+                                          style: TextStyle(
+                                            color: c.dueAmount > 0
+                                                ? Colors.red
+                                                : Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const Text('Due',
+                                            style: TextStyle(fontSize: 10)),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCustomer = c;
+                                        _phoneController.text = c.phone;
+                                        _isNewCustomer = false;
+                                      });
+                                      Navigator.pop(ctx);
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            });
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
@@ -337,15 +463,35 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Phone Number',
-              prefixIcon: Icon(Icons.phone),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: _onPhoneChanged,
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: _onPhoneChanged,
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: _showCustomerSelectionDialog,
+                  icon: const Icon(Icons.person_search),
+                  label: const Text('Select'),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           if (_selectedCustomer != null) ...[
             const SizedBox(height: 12),
@@ -360,9 +506,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 children: [
                   const Icon(Icons.check_circle, color: Colors.green),
                   const SizedBox(width: 8),
-                  Text(
-                    'Customer: ${_selectedCustomer!.name}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected: ${_selectedCustomer!.name}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Phone: ${_selectedCustomer!.phone}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _selectedCustomer = null;
+                        _phoneController.clear();
+                        _isNewCustomer = false;
+                      });
+                    },
                   ),
                 ],
               ),

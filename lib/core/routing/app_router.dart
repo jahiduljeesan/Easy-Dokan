@@ -16,6 +16,8 @@ import '../../features/pos/checkout_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/customers/customer_edit_screen.dart';
+import '../../features/customers/customer_detail_screen.dart';
+import '../../features/customers/debt_list_screen.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/customer_model.dart';
 
@@ -114,6 +116,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) => CustomerEditScreen(
                       customer: state.extra as CustomerModel,
                     ),
+                  ),
+                  GoRoute(
+                    path: 'detail',
+                    builder: (context, state) => CustomerDetailScreen(
+                      customer: state.extra as CustomerModel,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'debts',
+                    builder: (context, state) => const DebtListScreen(),
                   ),
                 ],
               ),

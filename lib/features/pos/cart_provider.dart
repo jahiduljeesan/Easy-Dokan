@@ -3,11 +3,18 @@ import '../../data/models/product_model.dart';
 
 class CartItem {
   final ProductModel product;
-  int quantity;
+  final int quantity;
 
   CartItem({required this.product, this.quantity = 1});
 
   double get totalPrice => product.sellingPrice * quantity;
+
+  CartItem copyWith({ProductModel? product, int? quantity}) {
+    return CartItem(
+      product: product ?? this.product,
+      quantity: quantity ?? this.quantity,
+    );
+  }
 }
 
 class CartState {
@@ -66,7 +73,9 @@ class CartNotifier extends StateNotifier<CartState> {
     );
     if (existingIndex >= 0) {
       final newItems = List<CartItem>.from(state.items);
-      newItems[existingIndex].quantity += 1;
+      newItems[existingIndex] = newItems[existingIndex].copyWith(
+        quantity: newItems[existingIndex].quantity + 1,
+      );
       state = state.copyWith(items: newItems);
     } else {
       state = state.copyWith(
@@ -86,7 +95,7 @@ class CartNotifier extends StateNotifier<CartState> {
     final newItems = List<CartItem>.from(state.items);
     final index = newItems.indexWhere((item) => item.product.uid == uid);
     if (index >= 0) {
-      newItems[index].quantity = quantity;
+      newItems[index] = newItems[index].copyWith(quantity: quantity);
       state = state.copyWith(items: newItems);
     }
   }

@@ -122,9 +122,21 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               context.push('/customers/edit', extra: customer);
             } else if (value == 'delete') {
               _showDeleteDialog(customer);
+            } else if (value == 'detail') {
+              context.push('/customers/detail', extra: customer);
             }
           },
           itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'detail',
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Details'),
+                ],
+              ),
+            ),
             PopupMenuItem(
               value: 'edit',
               child: Row(
@@ -150,7 +162,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             ),
           ],
         ),
-        onTap: () => context.push('/customers/edit', extra: customer),
+        onTap: () => context.push('/customers/detail', extra: customer),
       ),
     );
   }
