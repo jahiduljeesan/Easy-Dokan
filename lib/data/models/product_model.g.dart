@@ -23,25 +23,29 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
       banglaName: fields[3] as String?,
       category: fields[4] as String?,
       brand: fields[5] as String?,
-      buyingPrice: fields[6] as double,
-      sellingPrice: fields[7] as double,
-      wholesalePrice: fields[8] as double,
-      quantity: fields[9] as int,
+      buyingPrice: fields[6] as num,
+      sellingPrice: fields[7] as num,
+      wholesalePrice: fields[8] as num,
+      quantity: fields[9] as num,
       unitType: fields[10] as String?,
-      discount: fields[11] as double?,
-      vat: fields[12] as double?,
+      discount: fields[11] as num?,
+      vat: fields[12] as num?,
       supplierId: fields[13] as String?,
       imagePath: fields[14] as String?,
       expiryDate: fields[15] as DateTime?,
       createdDate: fields[16] as DateTime,
       updatedDate: fields[17] as DateTime,
+      attributes: (fields[18] as Map?)?.map((dynamic k, dynamic v) =>
+          MapEntry(k as String, (v as List).cast<String>())),
+      isMeasurable: fields[19] as bool?,
+      unit: fields[20] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProductModel obj) {
     writer
-      ..writeByte(18)
+      ..writeByte(21)
       ..writeByte(0)
       ..write(obj.uid)
       ..writeByte(1)
@@ -77,7 +81,13 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
       ..writeByte(16)
       ..write(obj.createdDate)
       ..writeByte(17)
-      ..write(obj.updatedDate);
+      ..write(obj.updatedDate)
+      ..writeByte(18)
+      ..write(obj.attributes)
+      ..writeByte(19)
+      ..write(obj.isMeasurable)
+      ..writeByte(20)
+      ..write(obj.unit);
   }
 
   @override

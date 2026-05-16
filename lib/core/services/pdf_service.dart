@@ -39,13 +39,44 @@ class PdfService {
               ),
               pw.Divider(),
               ...sale.items.map(
-                (item) => pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                (item) => pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Expanded(child: pw.Text(item.productName)),
-                    pw.Text('${item.quantity}'),
-                    pw.SizedBox(width: 20),
-                    pw.Text(item.total.toStringAsFixed(2)),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Expanded(
+                          child: pw.Text(
+                            item.productName,
+                            style: pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        pw.Text(
+                          item.quantity % 1 == 0
+                              ? item.quantity.toInt().toString()
+                              : item.quantity.toStringAsFixed(2),
+                          style: pw.TextStyle(fontSize: 10),
+                        ),
+                        pw.SizedBox(width: 20),
+                        pw.Text(
+                          item.total.toStringAsFixed(2),
+                          style: pw.TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    if (item.selectedAttributes != null &&
+                        item.selectedAttributes!.isNotEmpty)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(bottom: 2),
+                        child: pw.Text(
+                          '  ${item.selectedAttributes!.values.join(", ")}',
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            color: PdfColors.grey700,
+                            fontStyle: pw.FontStyle.italic,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -224,68 +255,193 @@ class PdfService {
   static Future<void> generateSalesReport(
       DateTime start, DateTime end, List<SaleModel> sales) async {
     final pdf = pw.Document();
+
+    // Summary Metrics
     final totalSales = sales.fold(0.0, (sum, s) => sum + s.total);
     final totalProfit = sales.fold(0.0, (sum, s) => sum + s.profit);
     final totalDue = sales.fold(0.0, (sum, s) => sum + s.dueAmount);
+    final avgOrder = sales.isEmpty ? 0.0 : totalSales / sales.length;
+
+    // Top Selling Products
+    final productQty = <String, double>{};
+    final productRev = <String, double>{};
+    for (var sale in sales) {
+      for (var item in sale.items) {
+        productQty[item.productName] =
+            (productQty[item.productName] ?? 0) + item.quantity;
+        productRev[item.productName] =
+            (productRev[item.productName] ?? 0) + item.total;
+      }
+    }
+    final sortedProducts = productQty.keys.toList()
+      ..sort((a, b) => productQty[b]!.compareTo(productQty[a]!));
+    final topProducts = sortedProducts.take(5).toList();
+
+    // Category Breakdown
+    final categoryRev = <String, double>{};
+    for (var sale in sales) {
+      for (var item in sale.items) {
+        final cat = item.category ?? 'Uncategorized';
+        categoryRev[cat] = (categoryRev[cat] ?? 0) + item.total;
+      }
+    }
+    final sortedCategories = categoryRev.keys.toList()
+      ..sort((a, b) => categoryRev[b]!.compareTo(categoryRev[a]!));
 
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
           return [
-            pw.Header(
-              level: 0,
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('SALES REPORT',
-                      style: pw.TextStyle(
-                          fontSize: 24, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('EASY DOKAN',
-                      style: pw.TextStyle(
-                          fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text(
-                'Period: ${start.toString().split(' ')[0]} to ${end.toString().split(' ')[0]}'),
-            pw.SizedBox(height: 20),
+            // Professional Header
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatCard('Total Sales', '৳${totalSales.toStringAsFixed(0)}'),
-                _buildStatCard('Total Profit', '৳${totalProfit.toStringAsFixed(0)}'),
-                _buildStatCard('Total Due', '৳${totalDue.toStringAsFixed(0)}'),
-                _buildStatCard('Transactions', '${sales.length}'),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('SALES PERFORMANCE REPORT',
+                        style: pw.TextStyle(
+                            fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                    pw.Text('Easy Dokan POS - Smart Business Management',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Period:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text('${start.toString().split(' ')[0]} to ${end.toString().split(' ')[0]}'),
+                  ],
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+            pw.Divider(thickness: 2, color: PdfColors.blue900),
+            pw.SizedBox(height: 20),
+
+            // Summary Section
+            pw.Text('1. EXECUTIVE SUMMARY',
+                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatCard('TOTAL SALES', '৳${totalSales.toStringAsFixed(0)}', PdfColors.blue800),
+                _buildStatCard('TOTAL PROFIT', '৳${totalProfit.toStringAsFixed(0)}', PdfColors.green800),
+                _buildStatCard('TOTAL DUE', '৳${totalDue.toStringAsFixed(0)}', PdfColors.red800),
+                _buildStatCard('AVG. ORDER', '৳${avgOrder.toStringAsFixed(0)}', PdfColors.orange800),
               ],
             ),
             pw.SizedBox(height: 30),
+
+            // Top Products Section
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  flex: 3,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('2. TOP SELLING PRODUCTS',
+                          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 10),
+                      pw.Table.fromTextArray(
+                        headers: ['Product Name', 'Qty', 'Revenue'],
+                        data: topProducts.map((p) => [
+                          p,
+                          productQty[p].toString().contains('.') && !productQty[p]!.toString().endsWith('.0')
+                              ? productQty[p]!.toStringAsFixed(2)
+                              : productQty[p]!.toInt().toString(),
+                          '৳${productRev[p]!.toStringAsFixed(0)}'
+                        ]).toList(),
+                        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                        headerDecoration: const pw.BoxDecoration(color: PdfColors.blue700),
+                        cellHeight: 25,
+                        cellAlignments: {
+                          0: pw.Alignment.centerLeft,
+                          1: pw.Alignment.center,
+                          2: pw.Alignment.centerRight,
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(width: 20),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('3. CATEGORY BREAKDOWN',
+                          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 10),
+                      pw.Table.fromTextArray(
+                        headers: ['Category', 'Sales'],
+                        data: sortedCategories.map((c) => [
+                          c,
+                          '৳${categoryRev[c]!.toStringAsFixed(0)}'
+                        ]).toList(),
+                        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey700),
+                        cellHeight: 25,
+                        cellAlignments: {
+                          0: pw.Alignment.centerLeft,
+                          1: pw.Alignment.centerRight,
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 30),
+
+            // Recent Transactions Section
+            pw.Text('4. DETAILED TRANSACTION HISTORY',
+                style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
             pw.Table.fromTextArray(
-              headers: ['Date', 'Invoice ID', 'Items', 'Total', 'Profit'],
-              data: sales.map((s) {
+              headers: ['Date', 'Invoice ID', 'Items', 'Amount', 'Status'],
+              data: sales.take(20).map((s) {
                 return [
-                  s.date.toString().substring(0, 16),
+                  s.date.toString().substring(5, 16),
                   s.id,
-                  '${s.items.length}',
+                  s.items.length.toString(),
                   '৳${s.total.toStringAsFixed(0)}',
-                  '৳${s.profit.toStringAsFixed(0)}',
+                  s.dueAmount > 0 ? 'DUE' : 'PAID',
                 ];
               }).toList(),
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              headerDecoration:
-                  const pw.BoxDecoration(color: PdfColors.grey300),
-              cellHeight: 25,
+              headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+              cellHeight: 20,
+              cellStyle: const pw.TextStyle(fontSize: 9),
               cellAlignments: {
                 0: pw.Alignment.centerLeft,
                 1: pw.Alignment.centerLeft,
                 2: pw.Alignment.center,
                 3: pw.Alignment.centerRight,
-                4: pw.Alignment.centerRight,
+                4: pw.Alignment.center,
               },
             ),
-            pw.SizedBox(height: 50),
-            pw.Center(child: pw.Text('End of Report')),
+            if (sales.length > 20)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 8),
+                child: pw.Text('* Showing first 20 transactions only',
+                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic)),
+              ),
+            
+            pw.Spacer(),
+            pw.Divider(),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('Generated by Easy Dokan POS', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                pw.Text('Page 1 of 1', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+              ],
+            ),
           ];
         },
       ),
@@ -296,18 +452,20 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildStatCard(String title, String value) {
+  static pw.Widget _buildStatCard(String title, String value, PdfColor color) {
     return pw.Container(
+      width: 110,
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey),
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(5)),
+        color: color,
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
       ),
       child: pw.Column(
         children: [
-          pw.Text(title, style: const pw.TextStyle(fontSize: 10)),
+          pw.Text(title, style: const pw.TextStyle(fontSize: 8, color: PdfColors.white)),
+          pw.SizedBox(height: 4),
           pw.Text(value,
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
         ],
       ),
     );

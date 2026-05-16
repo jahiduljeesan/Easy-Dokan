@@ -20,12 +20,14 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   late TextEditingController _sellingPriceController;
   late TextEditingController _quantityController;
   late TextEditingController _categoryController;
-  Map<String, String> _attributes = {};
+  late TextEditingController _unitController;
+  bool _isMeasurable = false;
+  Map<String, List<String>> _attributes = {};
 
   @override
   void initState() {
     super.initState();
-    _attributes = Map<String, String>.from(widget.product?.attributes ?? {});
+    _attributes = Map<String, List<String>>.from(widget.product?.attributes ?? {});
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _barcodeController = TextEditingController(
       text: widget.product?.barcodeId ?? '',
@@ -42,6 +44,8 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     _categoryController = TextEditingController(
       text: widget.product?.category ?? '',
     );
+    _unitController = TextEditingController(text: widget.product?.unit ?? '');
+    _isMeasurable = widget.product?.isMeasurable ?? false;
   }
 
   @override
@@ -52,26 +56,30 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     _sellingPriceController.dispose();
     _quantityController.dispose();
     _categoryController.dispose();
+    _unitController.dispose();
     super.dispose();
   }
 
   void _showAddAttributeDialog() {
     String key = '';
-    String value = '';
+    String valuesStr = '';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Detail'),
+        title: const Text('Add Options'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(labelText: 'Field Name (e.g. Size, Color)'),
+              decoration: const InputDecoration(labelText: 'Option Name (e.g. Size)'),
               onChanged: (v) => key = v,
             ),
             TextField(
-              decoration: const InputDecoration(labelText: 'Value'),
-              onChanged: (v) => value = v,
+              decoration: const InputDecoration(
+                labelText: 'Values (comma separated)',
+                hintText: 'M, L, XL',
+              ),
+              onChanged: (v) => valuesStr = v,
             ),
           ],
         ),
@@ -79,11 +87,18 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
           TextButton(onPressed: () => context.pop(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              if (key.isNotEmpty && value.isNotEmpty) {
-                setState(() {
-                  _attributes[key] = value;
-                });
-                context.pop();
+              if (key.isNotEmpty && valuesStr.isNotEmpty) {
+                final values = valuesStr
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList();
+                if (values.isNotEmpty) {
+                  setState(() {
+                    _attributes[key] = values;
+                  });
+                  context.pop();
+                }
               }
             },
             child: const Text('Add'),
@@ -104,13 +119,15 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             : _barcodeController.text,
         buyingPrice: double.tryParse(_buyingPriceController.text) ?? 0.0,
         sellingPrice: double.tryParse(_sellingPriceController.text) ?? 0.0,
-        quantity: int.tryParse(_quantityController.text) ?? 0,
+        quantity: double.tryParse(_quantityController.text) ?? 0.0,
         category: _categoryController.text.isEmpty
             ? null
             : _categoryController.text,
         createdDate: widget.product?.createdDate ?? now,
         updatedDate: now,
         attributes: _attributes.isEmpty ? null : _attributes,
+        isMeasurable: _isMeasurable,
+        unit: _isMeasurable ? _unitController.text : null,
       );
 
       if (widget.product == null) {
@@ -212,14 +229,36 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _quantityController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                  labelText: 'Quantity',
+                  labelText: 'Stock Quantity',
                   prefixIcon: Icon(Icons.inventory),
                 ),
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text('Sold by Measurement'),
+                subtitle: const Text('e.g. Weight (kg), Volume (liter), Length (meter)'),
+                value: _isMeasurable,
+                onChanged: (val) => setState(() => _isMeasurable = val),
+                secondary: const Icon(Icons.scale),
+              ),
+              if (_isMeasurable) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _unitController,
+                  decoration: const InputDecoration(
+                    labelText: 'Unit (e.g. kg, gram, liter, meter)',
+                    prefixIcon: Icon(Icons.straighten),
+                    hintText: 'kg',
+                  ),
+                  validator: (value) => _isMeasurable && (value == null || value.isEmpty)
+                      ? 'Required for measurable products'
+                      : null,
+                ),
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -251,11 +290,11 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
                   itemCount: _attributes.length,
                   itemBuilder: (context, index) {
                     final key = _attributes.keys.elementAt(index);
-                    final value = _attributes[key];
+                    final values = _attributes[key] ?? [];
                     return Card(
                       child: ListTile(
                         title: Text(key),
-                        subtitle: Text(value ?? ''),
+                        subtitle: Text(values.join(', ')),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {

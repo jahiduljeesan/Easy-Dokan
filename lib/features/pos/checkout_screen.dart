@@ -117,6 +117,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             unitPrice: i.product.sellingPrice,
             total: i.totalPrice,
             buyingPrice: i.product.buyingPrice,
+            selectedAttributes: i.selectedAttributes,
+            category: i.product.category,
           ),
         )
         .toList();
@@ -402,8 +404,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   final item = cart.items[index];
                   return ListTile(
                     title: Text(item.product.name),
-                    subtitle: Text(
-                      '৳${item.product.sellingPrice} x ${item.quantity}',
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '৳${item.product.sellingPrice} x ${item.quantity}',
+                        ),
+                        if (item.selectedAttributes != null && item.selectedAttributes!.isNotEmpty)
+                          Text(
+                            item.selectedAttributes!.values.join(', '),
+                            style: const TextStyle(fontSize: 12, color: Colors.blue),
+                          ),
+                      ],
                     ),
                     trailing: Text(
                       '৳${item.totalPrice.toStringAsFixed(2)}',
@@ -417,8 +429,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ...cart.items.map(
               (item) => ListTile(
                 title: Text(item.product.name),
-                subtitle: Text(
-                  '৳${item.product.sellingPrice} x ${item.quantity}',
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '৳${item.product.sellingPrice} x ${item.quantity}',
+                    ),
+                    if (item.selectedAttributes != null && item.selectedAttributes!.isNotEmpty)
+                      Text(
+                        item.selectedAttributes!.values.join(', '),
+                        style: const TextStyle(fontSize: 12, color: Colors.blue),
+                      ),
+                  ],
                 ),
                 trailing: Text(
                   '৳${item.totalPrice.toStringAsFixed(2)}',

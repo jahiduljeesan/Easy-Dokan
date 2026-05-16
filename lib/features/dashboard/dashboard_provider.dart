@@ -15,7 +15,7 @@ class DashboardStats {
   
   // Analytics
   final Map<String, double> categorySales;
-  final List<MapEntry<String, int>> topProducts;
+  final List<MapEntry<String, double>> topProducts;
   final List<MapEntry<String, double>> topCustomers;
   
   // Chart Data
@@ -55,7 +55,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
   double totalProfit = 0.0;
   
   Map<String, double> catSales = {};
-  Map<String, int> prodCounts = {};
+  Map<String, double> prodCounts = {};
   Map<String, double> custSpending = {};
   
   List<double> weekData = List.filled(7, 0.0);
@@ -87,7 +87,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
       final product = products.where((p) => p.uid == item.productId).firstOrNull;
       final category = product?.category ?? 'Uncategorized';
       catSales[category] = (catSales[category] ?? 0) + item.total;
-      prodCounts[item.productName] = (prodCounts[item.productName] ?? 0) + item.quantity;
+      prodCounts[item.productName] = (prodCounts[item.productName] ?? 0) + item.quantity.toDouble();
     }
     
     // Customer analytics

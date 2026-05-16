@@ -23,25 +23,25 @@ class ProductModel extends HiveObject {
   String? brand;
 
   @HiveField(6)
-  double buyingPrice;
+  num buyingPrice;
 
   @HiveField(7)
-  double sellingPrice;
+  num sellingPrice;
 
   @HiveField(8)
-  double wholesalePrice;
+  num wholesalePrice;
 
   @HiveField(9)
-  int quantity;
+  num quantity;
 
   @HiveField(10)
   String? unitType;
 
   @HiveField(11)
-  double? discount;
+  num? discount;
 
   @HiveField(12)
-  double? vat;
+  num? vat;
 
   @HiveField(13)
   String? supplierId;
@@ -59,7 +59,13 @@ class ProductModel extends HiveObject {
   DateTime updatedDate;
 
   @HiveField(18)
-  Map<String, String>? attributes;
+  Map<String, List<String>>? attributes;
+
+  @HiveField(19)
+  bool? isMeasurable;
+
+  @HiveField(20)
+  String? unit;
 
   ProductModel({
     required this.uid,
@@ -81,5 +87,7 @@ class ProductModel extends HiveObject {
     required this.createdDate,
     required this.updatedDate,
     this.attributes,
+    this.isMeasurable = false,
+    this.unit,
   });
 }

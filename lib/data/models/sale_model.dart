@@ -11,25 +11,25 @@ class SaleModel extends HiveObject {
   List<SaleItemModel> items;
 
   @HiveField(2)
-  double subtotal;
+  num subtotal;
 
   @HiveField(3)
-  double discount;
+  num discount;
 
   @HiveField(4)
-  double vat;
+  num vat;
 
   @HiveField(5)
-  double total;
+  num total;
 
   @HiveField(6)
-  double paidAmount;
+  num paidAmount;
 
   @HiveField(7)
-  double dueAmount;
+  num dueAmount;
 
   @HiveField(8)
-  double profit;
+  num profit;
 
   @HiveField(9)
   String paymentMethod;
@@ -65,16 +65,22 @@ class SaleItemModel {
   String productName;
 
   @HiveField(2)
-  int quantity;
+  num quantity;
 
   @HiveField(3)
-  double unitPrice;
+  num unitPrice;
 
   @HiveField(4)
-  double total;
+  num total;
 
   @HiveField(5)
-  double buyingPrice;
+  num buyingPrice;
+
+  @HiveField(6)
+  Map<String, String>? selectedAttributes;
+
+  @HiveField(7)
+  String? category;
 
   SaleItemModel({
     required this.productId,
@@ -83,5 +89,7 @@ class SaleItemModel {
     required this.unitPrice,
     required this.total,
     required this.buyingPrice,
+    this.selectedAttributes,
+    this.category,
   });
 }

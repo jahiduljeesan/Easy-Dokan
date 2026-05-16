@@ -19,13 +19,13 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
     return SaleModel(
       id: fields[0] as String,
       items: (fields[1] as List).cast<SaleItemModel>(),
-      subtotal: fields[2] as double,
-      discount: fields[3] as double,
-      vat: fields[4] as double,
-      total: fields[5] as double,
-      paidAmount: fields[6] as double,
-      dueAmount: fields[7] as double,
-      profit: fields[8] as double,
+      subtotal: fields[2] as num,
+      discount: fields[3] as num,
+      vat: fields[4] as num,
+      total: fields[5] as num,
+      paidAmount: fields[6] as num,
+      dueAmount: fields[7] as num,
+      profit: fields[8] as num,
       paymentMethod: fields[9] as String,
       date: fields[10] as DateTime,
       customerId: fields[11] as String?,
@@ -86,17 +86,19 @@ class SaleItemModelAdapter extends TypeAdapter<SaleItemModel> {
     return SaleItemModel(
       productId: fields[0] as String,
       productName: fields[1] as String,
-      quantity: fields[2] as int,
-      unitPrice: fields[3] as double,
-      total: fields[4] as double,
-      buyingPrice: fields[5] as double,
+      quantity: fields[2] as num,
+      unitPrice: fields[3] as num,
+      total: fields[4] as num,
+      buyingPrice: fields[5] as num,
+      selectedAttributes: (fields[6] as Map?)?.cast<String, String>(),
+      category: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SaleItemModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.productId)
       ..writeByte(1)
@@ -108,7 +110,11 @@ class SaleItemModelAdapter extends TypeAdapter<SaleItemModel> {
       ..writeByte(4)
       ..write(obj.total)
       ..writeByte(5)
-      ..write(obj.buyingPrice);
+      ..write(obj.buyingPrice)
+      ..writeByte(6)
+      ..write(obj.selectedAttributes)
+      ..writeByte(7)
+      ..write(obj.category);
   }
 
   @override

@@ -19,27 +19,110 @@ class _POSScreenState extends ConsumerState<POSScreen> {
   String _selectedCategory = 'All';
 
   void _handleBarcodeScan(String barcode) {
-    final match = ref
-        .read(productsProvider)
-        .firstWhere(
-          (p) => p.barcodeId == barcode,
-          orElse: () => ProductModel(
-            uid: '',
-            name: '',
-            buyingPrice: 0,
-            sellingPrice: 0,
-            quantity: 0,
-            createdDate: DateTime.now(),
-            updatedDate: DateTime.now(),
-          ),
+    final products = ref.read(productsProvider);
+    final match = products.cast<ProductModel?>().firstWhere(
+          (p) => p?.barcodeId == barcode,
+          orElse: () => null,
         );
-    if (match.uid.isNotEmpty) {
-      ref.read(cartProvider.notifier).addProduct(match);
+    if (match != null) {
+      _showSelectionDialog(match);
     } else {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Product not found!')));
     }
+  }
+
+  void _showSelectionDialog(ProductModel p) {
+    if (p.isMeasurable != true && (p.attributes == null || p.attributes!.isEmpty)) {
+      ref.read(cartProvider.notifier).addProduct(p);
+      return;
+    }
+
+    final selectedOptions = <String, String>{};
+    if (p.attributes != null) {
+      p.attributes!.forEach((key, values) {
+        if (values.isNotEmpty) selectedOptions[key] = values.first;
+      });
+    }
+
+    double measurement = 1.0;
+    final measurementController = TextEditingController(text: '1.0');
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocalState) => AlertDialog(
+          title: Text(p.name),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (p.isMeasurable == true) ...[
+                  TextField(
+                    controller: measurementController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Measurement (${p.unit ?? 'qty'})',
+                      suffixText: p.unit,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (val) {
+                      setLocalState(() {
+                        measurement = double.tryParse(val) ?? 0.0;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Price: ৳${(measurement * p.sellingPrice).toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                  ),
+                  const Divider(),
+                ],
+                if (p.attributes != null)
+                  ...p.attributes!.keys.map((key) {
+                    final values = p.attributes![key]!;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(child: Text('$key:')),
+                          DropdownButton<String>(
+                            value: selectedOptions[key],
+                            items: values
+                                .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setLocalState(() => selectedOptions[key] = val);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(cartProvider.notifier).addProduct(
+                      p,
+                      selectedAttributes: selectedOptions.isEmpty ? null : selectedOptions,
+                      quantity: measurement,
+                    );
+                Navigator.pop(context);
+              },
+              child: const Text('Add to Cart'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -153,7 +236,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    '${p.category ?? 'Uncategorized'} | Stock: ${p.quantity}',
+                    '${p.category ?? 'Uncategorized'} | Stock: ${p.quantity % 1 == 0 ? p.quantity.toInt() : p.quantity.toStringAsFixed(2)} ${p.unit ?? ''}',
                   ),
                   trailing: Text(
                     '৳${p.sellingPrice}',
@@ -163,7 +246,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                       fontSize: 16,
                     ),
                   ),
-                  onTap: () => ref.read(cartProvider.notifier).addProduct(p),
+                  onTap: () => _showSelectionDialog(p),
                 ),
               );
             },
@@ -313,9 +396,19 @@ class CartPanel extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(
-                        '৳${item.product.sellingPrice} x ${item.quantity} = ৳${item.totalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 11),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '৳${item.product.sellingPrice} x ${item.quantity} = ৳${item.totalPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          if (item.selectedAttributes != null && item.selectedAttributes!.isNotEmpty)
+                            Text(
+                              item.selectedAttributes!.values.join(', '),
+                              style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                            ),
+                        ],
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -329,15 +422,49 @@ class CartPanel extends ConsumerWidget {
                             onPressed: () => ref
                                 .read(cartProvider.notifier)
                                 .updateQuantity(
-                                    item.product.uid, item.quantity - 1),
+                                    item.product.uid, item.quantity - 1,
+                                    selectedAttributes: item.selectedAttributes),
                           ),
                           SizedBox(
-                            width: 24,
-                            child: Text(
-                              '${item.quantity}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
+                            width: 40,
+                            child: InkWell(
+                              onTap: () {
+                                final controller = TextEditingController(text: item.quantity.toString());
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Update Quantity'),
+                                    content: TextField(
+                                      controller: controller,
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      autofocus: true,
+                                      decoration: const InputDecoration(border: OutlineInputBorder()),
+                                    ),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          final q = double.tryParse(controller.text) ?? item.quantity;
+                                          ref.read(cartProvider.notifier).updateQuantity(
+                                                item.product.uid,
+                                                q,
+                                                selectedAttributes: item.selectedAttributes,
+                                              );
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Update'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                item.quantity % 1 == 0
+                                    ? item.quantity.toInt().toString()
+                                    : item.quantity.toStringAsFixed(2),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
                             ),
                           ),
                           IconButton(
@@ -349,7 +476,8 @@ class CartPanel extends ConsumerWidget {
                             onPressed: () => ref
                                 .read(cartProvider.notifier)
                                 .updateQuantity(
-                                    item.product.uid, item.quantity + 1),
+                                    item.product.uid, item.quantity + 1,
+                                    selectedAttributes: item.selectedAttributes),
                           ),
                           IconButton(
                             padding: EdgeInsets.zero,
@@ -359,7 +487,8 @@ class CartPanel extends ConsumerWidget {
                                 color: Colors.red, size: 20),
                             onPressed: () => ref
                                 .read(cartProvider.notifier)
-                                .removeProduct(item.product.uid),
+                                .removeProduct(item.product.uid,
+                                    selectedAttributes: item.selectedAttributes),
                           ),
                         ],
                       ),
