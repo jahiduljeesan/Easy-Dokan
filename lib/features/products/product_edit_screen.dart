@@ -141,6 +141,14 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final allProducts = ref.watch(productsProvider);
+    final existingCategories = allProducts
+        .map((p) => p.category)
+        .where((c) => c != null && c.isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.product == null ? 'Add Product' : 'Edit Product'),
@@ -191,9 +199,27 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Category',
-                  prefixIcon: Icon(Icons.category),
+                  prefixIcon: const Icon(Icons.category),
+                  suffixIcon: existingCategories.isNotEmpty
+                      ? PopupMenuButton<String>(
+                          icon: const Icon(Icons.arrow_drop_down),
+                          onSelected: (value) {
+                            setState(() {
+                              _categoryController.text = value;
+                            });
+                          },
+                          itemBuilder: (context) {
+                            return existingCategories.map((category) {
+                              return PopupMenuItem<String>(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList();
+                          },
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 16),

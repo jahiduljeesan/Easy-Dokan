@@ -6,6 +6,7 @@ import '../products/products_provider.dart';
 import '../../data/models/product_model.dart';
 import '../../core/widgets/calculator_dialog.dart';
 import '../products/barcode_scanner_screen.dart';
+import '../../core/utils/sound_service.dart';
 
 class POSScreen extends ConsumerStatefulWidget {
   const POSScreen({super.key});
@@ -25,8 +26,10 @@ class _POSScreenState extends ConsumerState<POSScreen> {
           orElse: () => null,
         );
     if (match != null) {
+      ref.read(soundProvider).playSuccess();
       _showSelectionDialog(match);
     } else {
+      ref.read(soundProvider).playError();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Product not found!')));
@@ -102,7 +105,7 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
               ],
             ),
           ),
@@ -247,6 +250,9 @@ class _POSScreenState extends ConsumerState<POSScreen> {
                     ),
                   ),
                   onTap: () => _showSelectionDialog(p),
+                  onLongPress: () {
+                    context.push('/products/edit', extra: p);
+                  },
                 ),
               );
             },
@@ -403,6 +409,18 @@ class CartPanel extends ConsumerWidget {
                             '৳${item.product.sellingPrice} x ${item.quantity} = ৳${item.totalPrice.toStringAsFixed(2)}',
                             style: const TextStyle(fontSize: 11),
                           ),
+                          if (item.discount > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: Text(
+                                'Discount: -৳${item.itemDiscount.toStringAsFixed(2)} (${item.isDiscountPercentage ? "${item.discount}%" : "flat"})',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           if (item.selectedAttributes != null && item.selectedAttributes!.isNotEmpty)
                             Text(
                               item.selectedAttributes!.values.join(', '),
@@ -429,32 +447,92 @@ class CartPanel extends ConsumerWidget {
                             width: 40,
                             child: InkWell(
                               onTap: () {
-                                final controller = TextEditingController(text: item.quantity.toString());
+                                final qtyController = TextEditingController(text: item.quantity.toString());
+                                final discountController = TextEditingController(text: item.discount.toString());
+                                bool isPercentage = item.isDiscountPercentage;
+
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Update Quantity'),
-                                    content: TextField(
-                                      controller: controller,
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      autofocus: true,
-                                      decoration: const InputDecoration(border: OutlineInputBorder()),
-                                    ),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          final q = double.tryParse(controller.text) ?? item.quantity;
-                                          ref.read(cartProvider.notifier).updateQuantity(
-                                                item.product.uid,
-                                                q,
-                                                selectedAttributes: item.selectedAttributes,
-                                              );
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Update'),
+                                  builder: (context) => StatefulBuilder(
+                                    builder: (context, setLocalState) => AlertDialog(
+                                      title: Text('Edit ${item.product.name}'),
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            TextField(
+                                              controller: qtyController,
+                                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                              decoration: const InputDecoration(
+                                                labelText: 'Quantity',
+                                                border: OutlineInputBorder(),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextField(
+                                                    controller: discountController,
+                                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                                    decoration: InputDecoration(
+                                                      labelText: 'Discount',
+                                                      suffixText: isPercentage ? '%' : '৳',
+                                                      border: const OutlineInputBorder(),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                ToggleButtons(
+                                                  isSelected: [!isPercentage, isPercentage],
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  onPressed: (index) {
+                                                    setLocalState(() {
+                                                      isPercentage = index == 1;
+                                                    });
+                                                  },
+                                                  children: const [
+                                                    Padding(
+                                                      padding: EdgeInsets.symmetric(horizontal: 12),
+                                                      child: Text('৳'),
+                                                    ),
+                                                    Padding(
+                                                      padding: EdgeInsets.symmetric(horizontal: 12),
+                                                      child: Text('%'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            final q = double.tryParse(qtyController.text) ?? item.quantity;
+                                            final d = double.tryParse(discountController.text) ?? 0.0;
+                                            ref.read(cartProvider.notifier).updateQuantity(
+                                                  item.product.uid,
+                                                  q,
+                                                  selectedAttributes: item.selectedAttributes,
+                                                );
+                                            ref.read(cartProvider.notifier).updateProductDiscount(
+                                                  item.product.uid,
+                                                  d,
+                                                  isPercentage: isPercentage,
+                                                  selectedAttributes: item.selectedAttributes,
+                                                );
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text('Update'),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },

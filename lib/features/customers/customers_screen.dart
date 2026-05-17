@@ -127,13 +127,13 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             }
           },
           itemBuilder: (context) => [
-            PopupMenuItem(
+            const PopupMenuItem(
               value: 'detail',
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 20),
-                  const SizedBox(width: 8),
-                  const Text('Details'),
+                  Icon(Icons.info_outline, size: 20),
+                  SizedBox(width: 8),
+                  Text('Details'),
                 ],
               ),
             ),

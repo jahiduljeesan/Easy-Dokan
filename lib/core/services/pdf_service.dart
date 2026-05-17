@@ -1,11 +1,20 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../data/models/sale_model.dart';
 import '../../data/models/customer_model.dart';
+import '../../data/models/settings_model.dart';
 
 class PdfService {
-  static Future<void> generateAndPrintInvoice(SaleModel sale) async {
+  static Future<pw.Document> _buildInvoiceDocument(
+    SaleModel sale,
+    SettingsModel settings, {
+    CustomerModel? customer,
+  }) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -16,25 +25,43 @@ class PdfService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text(
-                  'EASY DOKAN',
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                child: pw.Column(
+                  children: [
+                    pw.Text(
+                      settings.shopName,
+                      style: pw.TextStyle(
+                        fontSize: 14,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    if (settings.address != null && settings.address!.isNotEmpty)
+                      pw.Text(
+                        settings.address!,
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    if (settings.phone != null && settings.phone!.isNotEmpty)
+                      pw.Text(
+                        'Phone: ${settings.phone!}',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                  ],
                 ),
               ),
               pw.SizedBox(height: 10),
-              pw.Text('Date: ${sale.date.toString().substring(0, 16)}'),
-              pw.Text('Invoice No: ${sale.id}'),
+              pw.Text('Date: ${sale.date.toString().substring(0, 16)}', style: const pw.TextStyle(fontSize: 9)),
+              pw.Text('Invoice No: ${sale.id}', style: const pw.TextStyle(fontSize: 9)),
+              if (customer != null) ...[
+                pw.Text('Customer: ${customer.name}', style: const pw.TextStyle(fontSize: 9)),
+                pw.Text('Cust. Phone: ${customer.phone}', style: const pw.TextStyle(fontSize: 9)),
+              ],
               pw.Divider(),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Expanded(child: pw.Text('Item')),
-                  pw.Text('Qty'),
+                  pw.Expanded(child: pw.Text('Item', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                  pw.Text('Qty', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(width: 20),
-                  pw.Text('Price'),
+                  pw.Text('Price', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
                 ],
               ),
               pw.Divider(),
@@ -48,19 +75,19 @@ class PdfService {
                         pw.Expanded(
                           child: pw.Text(
                             item.productName,
-                            style: pw.TextStyle(fontSize: 10),
+                            style: const pw.TextStyle(fontSize: 9),
                           ),
                         ),
                         pw.Text(
                           item.quantity % 1 == 0
                               ? item.quantity.toInt().toString()
                               : item.quantity.toStringAsFixed(2),
-                          style: pw.TextStyle(fontSize: 10),
+                          style: const pw.TextStyle(fontSize: 9),
                         ),
                         pw.SizedBox(width: 20),
                         pw.Text(
                           item.total.toStringAsFixed(2),
-                          style: pw.TextStyle(fontSize: 10),
+                          style: const pw.TextStyle(fontSize: 9),
                         ),
                       ],
                     ),
@@ -86,9 +113,9 @@ class PdfService {
                 children: [
                   pw.Text(
                     'Subtotal:',
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
                   ),
-                  pw.Text(sale.subtotal.toStringAsFixed(2)),
+                  pw.Text(sale.subtotal.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 9)),
                 ],
               ),
               pw.Row(
@@ -96,9 +123,9 @@ class PdfService {
                 children: [
                   pw.Text(
                     'Discount:',
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
                   ),
-                  pw.Text(sale.discount.toStringAsFixed(2)),
+                  pw.Text(sale.discount.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 9)),
                 ],
               ),
               pw.Divider(),
@@ -108,14 +135,14 @@ class PdfService {
                   pw.Text(
                     'Total:',
                     style: pw.TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
                   pw.Text(
                     sale.total.toStringAsFixed(2),
                     style: pw.TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
@@ -127,9 +154,9 @@ class PdfService {
                 children: [
                   pw.Text(
                     'Paid:',
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
                   ),
-                  pw.Text(sale.paidAmount.toStringAsFixed(2)),
+                  pw.Text(sale.paidAmount.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 9)),
                 ],
               ),
               pw.Row(
@@ -137,22 +164,72 @@ class PdfService {
                 children: [
                   pw.Text(
                     'Due:',
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
                   ),
-                  pw.Text(sale.dueAmount.toStringAsFixed(2)),
+                  pw.Text(sale.dueAmount.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 9)),
                 ],
               ),
-              pw.SizedBox(height: 20),
-              pw.Center(child: pw.Text('Thank you for shopping with us!')),
+              pw.SizedBox(height: 15),
+              pw.Center(child: pw.Text('Thank you for shopping with us!', style: const pw.TextStyle(fontSize: 9))),
+              pw.SizedBox(height: 5),
+              pw.Center(
+                child: pw.Text(
+                  'Receipt was generated by Easy Dokan Software',
+                  style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic),
+                ),
+              ),
             ],
           );
         },
       ),
     );
 
+    return pdf;
+  }
+
+  static Future<void> generateAndPrintInvoice(
+    SaleModel sale,
+    SettingsModel settings, {
+    CustomerModel? customer,
+  }) async {
+    final pdf = await _buildInvoiceDocument(sale, settings, customer: customer);
+    final bytes = await pdf.save();
+
+    // Auto Save
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/receipt_${sale.id}.pdf');
+      await file.writeAsBytes(bytes);
+    } catch (e) {
+      debugPrint('Auto save error: $e');
+    }
+
     await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
+      onLayout: (PdfPageFormat format) async => bytes,
     );
+  }
+
+  static Future<void> shareInvoice(
+    SaleModel sale,
+    SettingsModel settings, {
+    CustomerModel? customer,
+  }) async {
+    final pdf = await _buildInvoiceDocument(sale, settings, customer: customer);
+    final bytes = await pdf.save();
+
+    // Auto Save & Direct Share
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/receipt_${sale.id}.pdf');
+      await file.writeAsBytes(bytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'application/pdf')],
+        text: 'Receipt from ${settings.shopName} - Invoice #${sale.id}',
+      );
+    } catch (e) {
+      debugPrint('Share error: $e');
+    }
   }
 
   static Future<void> generateCustomerStatement(
@@ -430,7 +507,7 @@ class PdfService {
               pw.Padding(
                 padding: const pw.EdgeInsets.only(top: 8),
                 child: pw.Text('* Showing first 20 transactions only',
-                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic)),
+                    style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic)),
               ),
             
             pw.Spacer(),

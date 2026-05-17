@@ -2,8 +2,15 @@ subprojects {
     afterEvaluate { project ->
         if (project.hasProperty("android")) {
             project.android {
-                if (compileSdkVersion != null && compileSdkVersion.toString().toIntOrNull() != null && compileSdkVersion.toString().toInt() < 34) {
-                    compileSdkVersion 34
+                if (compileSdkVersion != null) {
+                    def sdkStr = compileSdkVersion.toString()
+                    if (sdkStr.isInteger() && sdkStr.toInteger() < 34) {
+                        compileSdkVersion 34
+                    }
+                }
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
                 }
             }
         }

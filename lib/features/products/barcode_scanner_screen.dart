@@ -184,48 +184,48 @@ class ScannerOverlayPainter extends CustomPainter {
     // Top-Left
     canvas.drawLine(
       scanWindow.topLeft,
-      scanWindow.topLeft + Offset(cornerLength, 0),
+      scanWindow.topLeft + const Offset(cornerLength, 0),
       borderPaint,
     );
     canvas.drawLine(
       scanWindow.topLeft,
-      scanWindow.topLeft + Offset(0, cornerLength),
+      scanWindow.topLeft + const Offset(0, cornerLength),
       borderPaint,
     );
 
     // Top-Right
     canvas.drawLine(
       scanWindow.topRight,
-      scanWindow.topRight + Offset(-cornerLength, 0),
+      scanWindow.topRight + const Offset(-cornerLength, 0),
       borderPaint,
     );
     canvas.drawLine(
       scanWindow.topRight,
-      scanWindow.topRight + Offset(0, cornerLength),
+      scanWindow.topRight + const Offset(0, cornerLength),
       borderPaint,
     );
 
     // Bottom-Left
     canvas.drawLine(
       scanWindow.bottomLeft,
-      scanWindow.bottomLeft + Offset(cornerLength, 0),
+      scanWindow.bottomLeft + const Offset(cornerLength, 0),
       borderPaint,
     );
     canvas.drawLine(
       scanWindow.bottomLeft,
-      scanWindow.bottomLeft + Offset(0, -cornerLength),
+      scanWindow.bottomLeft + const Offset(0, -cornerLength),
       borderPaint,
     );
 
     // Bottom-Right
     canvas.drawLine(
       scanWindow.bottomRight,
-      scanWindow.bottomRight + Offset(-cornerLength, 0),
+      scanWindow.bottomRight + const Offset(-cornerLength, 0),
       borderPaint,
     );
     canvas.drawLine(
       scanWindow.bottomRight,
-      scanWindow.bottomRight + Offset(0, -cornerLength),
+      scanWindow.bottomRight + const Offset(0, -cornerLength),
       borderPaint,
     );
   }

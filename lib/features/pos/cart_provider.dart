@@ -5,24 +5,40 @@ class CartItem {
   final ProductModel product;
   final double quantity;
   final Map<String, String>? selectedAttributes;
+  final double discount;
+  final bool isDiscountPercentage;
 
   CartItem({
     required this.product,
     this.quantity = 1.0,
     this.selectedAttributes,
+    this.discount = 0.0,
+    this.isDiscountPercentage = false,
   });
 
-  double get totalPrice => product.sellingPrice * quantity;
+  double get itemDiscount {
+    if (isDiscountPercentage) {
+      return (product.sellingPrice * quantity) * (discount / 100);
+    } else {
+      return discount;
+    }
+  }
+
+  double get totalPrice => (product.sellingPrice * quantity) - itemDiscount;
 
   CartItem copyWith({
     ProductModel? product,
     double? quantity,
     Map<String, String>? selectedAttributes,
+    double? discount,
+    bool? isDiscountPercentage,
   }) {
     return CartItem(
       product: product ?? this.product,
       quantity: quantity ?? this.quantity,
       selectedAttributes: selectedAttributes ?? this.selectedAttributes,
+      discount: discount ?? this.discount,
+      isDiscountPercentage: isDiscountPercentage ?? this.isDiscountPercentage,
     );
   }
 }
@@ -133,6 +149,22 @@ class CartNotifier extends StateNotifier<CartState> {
                 _mapsEqual(item.selectedAttributes, selectedAttributes)))
         .toList();
     state = state.copyWith(items: newItems);
+  }
+
+  void updateProductDiscount(String uid, double discount, {bool isPercentage = false, Map<String, String>? selectedAttributes}) {
+    final newItems = List<CartItem>.from(state.items);
+    final index = newItems.indexWhere(
+      (item) =>
+          item.product.uid == uid &&
+          _mapsEqual(item.selectedAttributes, selectedAttributes),
+    );
+    if (index >= 0) {
+      newItems[index] = newItems[index].copyWith(
+        discount: discount,
+        isDiscountPercentage: isPercentage,
+      );
+      state = state.copyWith(items: newItems);
+    }
   }
 
   void setDiscountPercentage(double percentage) {

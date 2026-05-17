@@ -10,6 +10,7 @@ import '../../data/repositories_impl/sale_repository_impl.dart';
 import '../../core/services/pdf_service.dart';
 import '../customers/customers_provider.dart';
 import '../../data/models/customer_model.dart';
+import '../settings/settings_provider.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -165,82 +166,235 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   void _showPostSaleDialog(SaleModel sale) {
+    final settings = ref.read(settingsNotifierProvider);
+    CustomerModel? customer;
+    if (_selectedCustomer != null) {
+      customer = _selectedCustomer;
+    } else if (_isNewCustomer && _nameController.text.isNotEmpty) {
+      customer = CustomerModel(
+        id: sale.customerId ?? '',
+        name: _nameController.text,
+        phone: _phoneController.text,
+        dueAmount: sale.dueAmount.toDouble(),
+        createdDate: sale.date,
+      );
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+        title: Column(
           children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Text('Sale Completed'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 56),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Sale Completed',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, letterSpacing: -0.5),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Total: ৳${sale.total.toStringAsFixed(2)}'),
-            Text('Paid: ৳${sale.paidAmount.toStringAsFixed(2)}'),
-            if (sale.dueAmount > 0)
-              Text(
-                'Due: ৳${sale.dueAmount.toStringAsFixed(2)}',
-                style: const TextStyle(color: Colors.red),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
               ),
-            const SizedBox(height: 16),
-            const Text('What would you like to do next?'),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total Amount',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      ),
+                      Text(
+                        '৳${sale.total.toStringAsFixed(2)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Paid Amount',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      ),
+                      Text(
+                        '৳${sale.paidAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.green),
+                      ),
+                    ],
+                  ),
+                  if (sale.dueAmount > 0) ...[
+                    const Divider(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Due Amount',
+                          style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '৳${sale.dueAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Select next action to proceed:',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.go('/pos');
-            },
-            child: const Text('New Sale'),
-          ),
-          if (_phoneController.text.isNotEmpty || _selectedCustomer != null)
-            ElevatedButton.icon(
-              onPressed: () async {
-                final phone = _selectedCustomer?.phone ?? _phoneController.text;
-                final buffer = StringBuffer();
-                buffer.writeln('Easy Dokan - Invoice: ${sale.id}');
-                buffer.writeln('Date: ${sale.date.toString().split(' ')[0]}');
-                buffer.writeln('---');
-                for (var item in sale.items) {
-                  buffer.writeln(
-                    '${item.productName} x${item.quantity}: ৳${item.total.toStringAsFixed(0)}',
-                  );
-                }
-                buffer.writeln('---');
-                buffer.writeln(
-                  'Subtotal: ৳${sale.subtotal.toStringAsFixed(0)}',
-                );
-                if (sale.discount > 0)
-                  buffer.writeln(
-                    'Discount: ৳${sale.discount.toStringAsFixed(0)}',
-                  );
-                buffer.writeln('Total: ৳${sale.total.toStringAsFixed(0)}');
-                buffer.writeln('Paid: ৳${sale.paidAmount.toStringAsFixed(0)}');
-                if (sale.dueAmount > 0)
-                  buffer.writeln('Due: ৳${sale.dueAmount.toStringAsFixed(0)}');
-                buffer.writeln('Thank you!');
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => PdfService.generateAndPrintInvoice(sale, settings, customer: customer),
+                      icon: const Icon(Icons.print_rounded, size: 20),
+                      label: const Text('Print'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => PdfService.shareInvoice(sale, settings, customer: customer),
+                      icon: const Icon(Icons.share_rounded, size: 20),
+                      label: const Text('Share'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_phoneController.text.isNotEmpty || _selectedCustomer != null) ...[
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final phone = _selectedCustomer?.phone ?? _phoneController.text;
+                    final customerName = _selectedCustomer?.name ?? _nameController.text;
+                    final buffer = StringBuffer();
+                    buffer.writeln('${settings.shopName}');
+                    if (settings.address != null && settings.address!.isNotEmpty) {
+                      buffer.writeln('Address: ${settings.address}');
+                    }
+                    if (settings.phone != null && settings.phone!.isNotEmpty) {
+                      buffer.writeln('Phone: ${settings.phone}');
+                    }
+                    buffer.writeln('---');
+                    if (customerName.isNotEmpty) {
+                      buffer.writeln('Customer: $customerName');
+                    }
+                    buffer.writeln('Invoice: ${sale.id}');
+                    buffer.writeln('Date: ${sale.date.toString().split(' ')[0]}');
+                    buffer.writeln('---');
+                    for (var item in sale.items) {
+                      buffer.writeln(
+                        '${item.productName} x${item.quantity}: ৳${item.total.toStringAsFixed(0)}',
+                      );
+                    }
+                    buffer.writeln('---');
+                    buffer.writeln('Total: ৳${sale.total.toStringAsFixed(0)}');
+                    buffer.writeln('Paid: ৳${sale.paidAmount.toStringAsFixed(0)}');
+                    if (sale.dueAmount > 0) {
+                      buffer.writeln('Due: ৳${sale.dueAmount.toStringAsFixed(0)}');
+                    }
+                    buffer.writeln('---');
+                    buffer.writeln('Receipt was generated by Easy Dokan Software');
 
-                final msg = buffer.toString();
-                final uri = Uri.parse(
-                  'sms:$phone?body=${Uri.encodeComponent(msg)}',
-                );
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri);
-                }
-              },
-              icon: const Icon(Icons.sms),
-              label: const Text('SMS'),
-            ),
-          ElevatedButton.icon(
-            onPressed: () => PdfService.generateAndPrintInvoice(sale),
-            icon: const Icon(Icons.print),
-            label: const Text('Print'),
+                    final msg = buffer.toString();
+                    final uri = Uri.parse(
+                      'sms:$phone?body=${Uri.encodeComponent(msg)}',
+                    );
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    }
+                  },
+                  icon: const Icon(Icons.sms_rounded, size: 20),
+                  label: const Text('Send Invoice SMS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.go('/pos');
+                },
+                icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
+                label: const Text('Start New Sale'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.green.shade800,
+                  side: BorderSide(color: Colors.green.shade600, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

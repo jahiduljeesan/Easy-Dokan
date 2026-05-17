@@ -1,3 +1,5 @@
+apply(from = "fix_compile_sdk.gradle")
+
 allprojects {
     repositories {
         google()
