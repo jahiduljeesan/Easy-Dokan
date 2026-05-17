@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../main.dart'; // For localeProvider
+
+import '../settings/settings_provider.dart';
 
 class LanguageSelectionScreen extends ConsumerWidget {
   const LanguageSelectionScreen({super.key});
@@ -30,7 +31,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
               const SizedBox(height: 48),
               ElevatedButton(
                 onPressed: () {
-                  ref.read(localeProvider.notifier).state = const Locale('en');
+                  ref.read(settingsNotifierProvider.notifier).updateLanguage('en');
                   context.push('/setup_wizard');
                 },
                 style: ElevatedButton.styleFrom(
@@ -41,7 +42,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               OutlinedButton(
                 onPressed: () {
-                  ref.read(localeProvider.notifier).state = const Locale('bn');
+                  ref.read(settingsNotifierProvider.notifier).updateLanguage('bn');
                   context.push('/setup_wizard');
                 },
                 style: OutlinedButton.styleFrom(

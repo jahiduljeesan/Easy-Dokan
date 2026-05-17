@@ -14,6 +14,7 @@ import '../../features/products/barcode_scanner_screen.dart';
 import '../../features/pos/pos_screen.dart';
 import '../../features/pos/checkout_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/settings/credentials_screen.dart';
 import '../../features/reports/sales_report_screen.dart';
 import '../../features/customers/customers_screen.dart';
 import '../../features/customers/customer_edit_screen.dart';
@@ -143,6 +144,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/settings',
                 builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'credentials',
+                    builder: (context, state) => const CredentialsScreen(),
+                  ),
+                ],
               ),
             ],
           ),

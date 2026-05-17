@@ -28,6 +28,15 @@ class SettingsModel extends HiveObject {
   @HiveField(7)
   bool isSetupComplete;
 
+  @HiveField(8)
+  String? ownerName;
+
+  @HiveField(9)
+  String? businessEmail;
+
+  @HiveField(10)
+  String? tradeLicense;
+
   SettingsModel({
     this.shopName = 'Easy Dokan',
     this.currency = '৳',
@@ -37,5 +46,8 @@ class SettingsModel extends HiveObject {
     this.address,
     this.phone,
     this.isSetupComplete = false,
+    this.ownerName,
+    this.businessEmail,
+    this.tradeLicense,
   });
 }

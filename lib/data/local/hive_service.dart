@@ -7,6 +7,7 @@ import '../models/expense_model.dart';
 import '../models/inventory_log_model.dart';
 import '../models/settings_model.dart';
 import '../models/debt_model.dart';
+import '../models/credential_model.dart';
 
 class HiveService {
   static Future<void> init() async {
@@ -20,6 +21,7 @@ class HiveService {
     Hive.registerAdapter(InventoryLogModelAdapter());
     Hive.registerAdapter(SettingsModelAdapter());
     Hive.registerAdapter(DebtModelAdapter());
+    Hive.registerAdapter(CredentialModelAdapter());
 
     // Open boxes
     await Hive.openBox<ProductModel>('products');
@@ -30,5 +32,6 @@ class HiveService {
     await Hive.openBox<InventoryLogModel>('inventory_logs');
     await Hive.openBox<SettingsModel>('settings');
     await Hive.openBox<DebtModel>('debts');
+    await Hive.openBox<CredentialModel>('credentials');
   }
 }

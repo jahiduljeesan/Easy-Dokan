@@ -25,6 +25,9 @@ class SettingsNotifier extends StateNotifier<SettingsModel> {
     required String language,
     String? address,
     String? phone,
+    String? ownerName,
+    String? businessEmail,
+    String? tradeLicense,
   }) async {
     final newSettings = SettingsModel(
       shopName: shopName,
@@ -35,6 +38,9 @@ class SettingsNotifier extends StateNotifier<SettingsModel> {
       isDarkTheme: state.isDarkTheme,
       pinCode: state.pinCode,
       isSetupComplete: true,
+      ownerName: ownerName,
+      businessEmail: businessEmail,
+      tradeLicense: tradeLicense,
     );
     await updateSettings(newSettings);
   }
@@ -49,6 +55,9 @@ class SettingsNotifier extends StateNotifier<SettingsModel> {
       isDarkTheme: state.isDarkTheme,
       pinCode: pin,
       isSetupComplete: state.isSetupComplete,
+      ownerName: state.ownerName,
+      businessEmail: state.businessEmail,
+      tradeLicense: state.tradeLicense,
     );
     await updateSettings(newSettings);
   }
@@ -63,6 +72,9 @@ class SettingsNotifier extends StateNotifier<SettingsModel> {
       isDarkTheme: state.isDarkTheme,
       pinCode: state.pinCode,
       isSetupComplete: state.isSetupComplete,
+      ownerName: state.ownerName,
+      businessEmail: state.businessEmail,
+      tradeLicense: state.tradeLicense,
     );
     await updateSettings(newSettings);
   }

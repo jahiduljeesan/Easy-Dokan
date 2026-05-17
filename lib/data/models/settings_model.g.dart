@@ -25,13 +25,16 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       address: fields[5] as String?,
       phone: fields[6] as String?,
       isSetupComplete: fields[7] as bool,
+      ownerName: fields[8] as String?,
+      businessEmail: fields[9] as String?,
+      tradeLicense: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SettingsModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.shopName)
       ..writeByte(1)
@@ -47,7 +50,13 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       ..writeByte(6)
       ..write(obj.phone)
       ..writeByte(7)
-      ..write(obj.isSetupComplete);
+      ..write(obj.isSetupComplete)
+      ..writeByte(8)
+      ..write(obj.ownerName)
+      ..writeByte(9)
+      ..write(obj.businessEmail)
+      ..writeByte(10)
+      ..write(obj.tradeLicense);
   }
 
   @override

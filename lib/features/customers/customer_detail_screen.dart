@@ -37,30 +37,32 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isPayment ? 'Receive Payment' : 'Add Manual Debt'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Amount',
-                prefixText: '৳ ',
-                border: const OutlineInputBorder(),
-                fillColor: isPayment ? Colors.green.withOpacity(0.05) : Colors.red.withOpacity(0.05),
-                filled: true,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  prefixText: '৳ ',
+                  border: const OutlineInputBorder(),
+                  fillColor: isPayment ? Colors.green.withOpacity(0.05) : Colors.red.withOpacity(0.05),
+                  filled: true,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Note (Optional)',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _noteController,
+                decoration: const InputDecoration(
+                  labelText: 'Note (Optional)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
               ),
-              maxLines: 2,
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -98,7 +100,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 );
                 await ref.read(customersProvider.notifier).updateCustomer(updatedCustomer);
 
-                if (context.mounted) Navigator.pop(context);
+                if (ctx.mounted) Navigator.pop(ctx);
               }
             },
             style: ElevatedButton.styleFrom(

@@ -6,6 +6,7 @@ import 'data/local/hive_service.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'localization/app_localizations.dart';
+import 'features/settings/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,9 +19,16 @@ void main() async {
 }
 
 // Provider for locale
-final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
+final localeProvider = Provider<Locale>((ref) {
+  final settings = ref.watch(settingsNotifierProvider);
+  return Locale(settings.language);
+});
+
 // Provider for theme mode
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final settings = ref.watch(settingsNotifierProvider);
+  return settings.isDarkTheme ? ThemeMode.dark : ThemeMode.light;
+});
 
 class EasyDokanApp extends ConsumerWidget {
   const EasyDokanApp({super.key});
